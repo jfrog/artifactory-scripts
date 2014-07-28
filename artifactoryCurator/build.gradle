@@ -1,0 +1,97 @@
+apply from: "gradle/dependencies.gradle"
+
+buildscript {
+    repositories {
+//      mavenCentral()
+        maven {
+            name "jcenter"
+            url "http://jcenter.bintray.com"
+        }
+
+    }
+    dependencies {
+        classpath "com.netflix.nebula:gradle-info-plugin:1.9.5"
+        classpath "com.github.townsfolk:gradle-release:1.2"
+    }
+}
+
+repositories {
+//      mavenCentral()
+        maven {
+            name "jcenter"
+            url "http://jcenter.bintray.com"
+        }
+}
+
+apply plugin: "release"
+apply plugin: "idea"
+apply plugin: "project-reports"
+apply from: "gradle/idea/idea.gradle"
+apply from: "gradle/groovyModule.gradle"
+
+configurations {
+    capsule
+
+    all {
+        resolutionStrategy {
+            eachDependency { DependencyResolveDetails details ->
+                switch (requested.name) {
+                    case "commons-logging": useTarget "org.slf4j:jcl-over-slf4j:${commonVersions.slf4j}"; break
+                    case "groovy-all": useTarget "${requested.group}:groovy:${requested.version}"; break
+                }
+                switch (requested.group) {
+                    case "org.slf4j": useVersion commonVersions.slf4j; break
+                    case "org.codehaus.groovy": useVersion commonVersions.groovy; break
+                }
+            }
+        }
+    }
+}
+
+configurations {
+    ivy
+}
+
+dependencies {
+    ivy "org.apache.ivy:ivy:2.3.0"
+    compile "org.apache.ivy:ivy:2.3.0"
+    compile "org.codehaus.groovy:groovy-all:2.3.2"
+    compile "org.slf4j:jul-to-slf4j:${commonVersions.slf4j}"
+    compile "org.codehaus.groovy.modules.http-builder:http-builder:0.7"
+    compile "net.sf.json-lib:json-lib:2.4:jdk15"
+    compile "org.kohsuke.args4j:args4j-maven-plugin:2.0.22"
+    compile "org.jfrog.artifactory.client:artifactory-java-client-services:0.13"
+    compile "com.xlson.groovycsv:groovycsv:1.0"
+    compile "net.sf.opencsv:opencsv:1.8"
+    capsule "co.paralleluniverse:capsule:0.5.0"
+}
+
+tasks.withType(GroovyCompile) {
+    groovyClasspath += configurations.ivy
+}
+
+task capsule(type: Jar, dependsOn: jar) {
+    archiveName = 'artifactoryProcess-run.jar'
+    from jar
+    from { configurations.runtime }
+    from { configurations.capsule.collect { zipTree(it) } }
+    manifest {
+        attributes(
+            'Main-Class'         : 'Capsule',
+            'Application-Class'  : 'artifactoryProcess.ArtifactoryProcess',
+            'Application-Name'   : project.name,
+            'Application-Version': project.version,
+            'System-Properties'  : 'org.jboss.logging.provider=slf4j'
+        )
+    }
+}
+
+artifacts {
+    archives capsule
+}
+
+task libs(type: Sync) {
+  from configurations.compile
+  into "build/libs"
+}
+

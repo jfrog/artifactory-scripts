@@ -1,0 +1,3 @@
+function,value,mustHave,maxInState,webServer,comment 
+delete,,deletable,MaxInState.csv,http://artifactory01/,only columns of interest required
+mark,deletable,,MaxInState.csv,http://artifactory01/,columns can be in any order

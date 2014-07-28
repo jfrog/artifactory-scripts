@@ -1,0 +1,21 @@
+apply plugin: "codenarc"
+
+codenarc {
+    toolVersion = "0.20"
+}
+codenarcMain {
+    configFile = rootProject.file("gradle/codenarc/codenarcMain.groovy")
+}
+codenarcTest {
+    configFile = rootProject.file("gradle/codenarc/codenarcTest.groovy")
+}
+
+def codenarcTasks = tasks.withType(CodeNarc)
+
+task codenarc(dependsOn: codenarcTasks)
+
+check.dependsOn codenarcTasks
+
+tasks.withType(Test) {
+    mustRunAfter codenarcTasks
+}

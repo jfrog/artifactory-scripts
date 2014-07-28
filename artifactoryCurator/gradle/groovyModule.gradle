@@ -1,0 +1,9 @@
+apply plugin: "info"
+apply plugin: "groovy"
+
+sourceCompatibility = "1.7"
+targetCompatibility = "1.7"
+
+dependencies {
+    compile "org.codehaus.groovy:groovy-all:${commonVersions.groovy}"
+}

@@ -17,7 +17,7 @@ groovy ArtifactoryProcess.groovy [--dry-run] [--full-log] --function <func> --va
 
   Example: groovy ArtifactoryCleanup.groovy --domain domain --dry-run --full-log --function function --maxInState maxInState.csv --must-have mustHave --password password --repository repoName --targetDir targetDir --userName userName --value value --web-server webServer 1.0.1 1.0.2
 
-  Supported functions include [clear, delete, config, download, mark, repoPrint]
+  Supported functions include [clear, delete, config, download, mark, repoPrint, size]
 
   Columns in config csv files can be [repoName, targetDir, maxInState, domain, value, userName, mustHave, webServer, password, function]
 
@@ -44,6 +44,13 @@ read from a comma separated value (csv) file.  In this case the first line will
 name the parameters which are to be specified and the values for each step will
 be in the following lines.  It is recommended that parameters like user ID and 
 password be passed on the command line, not in the config file.
+
+The download function can be used to download all the jar files which match the
+version(s) provided.
+
+The size function will provide the sum of the sizes of the artifacts for each of
+the children of the specified node (it displays the first level children's size,
+but recurses to the lowest level for the sum).
 
 To run the script, it can be run from the git root as suggested above.  However,
 this requires that groovy 2.3 or higher be installed (parameters to closure 

@@ -4,9 +4,11 @@ import com.xlson.groovycsv.CsvIterator
 import groovy.util.logging.Log
 import org.jfrog.artifactory.client.Artifactory
 import org.jfrog.artifactory.client.Repositories
+import org.jfrog.artifactory.client.model.Item
 import org.jfrog.artifactory.client.model.impl.RepositoryTypeImpl
 import org.jfrog.artifactory.client.DownloadableArtifact;
 import org.jfrog.artifactory.client.ItemHandle;
+// import org.jfrog.artifactory.client.model.File; Conflicts with Java File class which we use elsewhere
 import org.jfrog.artifactory.client.PropertiesHandler;
 import org.jfrog.artifactory.client.model.Folder
 import org.kohsuke.args4j.Argument;
@@ -22,7 +24,7 @@ import com.xlson.groovycsv.CsvParser;
 
 
 @Grapes([
-        @GrabResolver(name='jcenter', root='http://jcenter.bintray.com/', m2Compatible=true),
+        @GrabResolver(name='artifactory01.nexus.commercehub.com', root='http://artifactory01.nexus.commercehub.com/artifactory/ext-release-local/', m2Compatible=true),
         @Grab(group='net.sf.json-lib', module='json-lib', version='2.4', classifier='jdk15' ),
         @Grab(group='org.codehaus.groovy.modules.http-builder', module='http-builder', version='0.7'),
         @Grab( group='com.xlson.groovycsv', module='groovycsv', version='1.0' ),
@@ -66,7 +68,7 @@ import com.xlson.groovycsv.CsvParser;
  */
 
 class ArtifactoryProcess {
-    public static final Set< String > validFunctions = [ 'mark', 'delete', 'clear', 'download', 'config', 'repoPrint' ];
+    public static final Set< String > validFunctions = [ 'mark', 'delete', 'clear', 'download', 'config', 'repoPrint', 'size' ];
     public static final Set< String > validParameters = [ 'function', 'value', 'mustHave', 'targetDir', 'maxInState', 'webServer', 'repoName', 'domain', 'userName', 'password' ];
 
     @Option(name='--dry-run', usage='Don\'t change anything; just list what would be done')
@@ -84,7 +86,7 @@ class ArtifactoryProcess {
     String value;
 
 //  eg  --must-have releasable
-    @Option(name='--must-have', metaVar='mustHave', usage="property required before applying delete, mark, download or clear, optional")
+    @Option(name='--must-have', metaVar='mustHave', usage="property required before applying delete, mark, download, size or clear, optional")
     String mustHave;
 
 //  eg  --targetDir d:/temp/bin
@@ -95,7 +97,7 @@ class ArtifactoryProcess {
     @Option(name='--maxInState', metaVar='maxInState', usage="name of csv file with states and max counts, optional")
     String maxInState;
 
-//  eg  --web-server 'http://artifactory01/artifactory/'
+//  eg  --web-server 'http://artifactory01/'
     @Option(name='--web-server', metaVar='webServer', usage='URL to use to access Artifactory server')
     String webServer;
 
@@ -147,6 +149,8 @@ class ArtifactoryProcess {
     Artifactory srvr;
     RepositoryHandle repo;
     private int numProcessed = 0;
+    private long thisSize = 0;
+    private long overAllSize = 0;
     String firstFunction;
     String lastConfig;
 
@@ -168,7 +172,7 @@ class ArtifactoryProcess {
         } catch(CmdLineException ex) {
             System.err.println(ex.getMessage());
             System.err.println();
-            System.err.println("groovy ArtifactoryProcess.groovy [--dry-run] [--full-log] --function <func> --value <val> --web-server http://YourWebServer --repository libs-release-prod --domain <com/YourOrg> Version1 ...");
+            System.err.println("groovy ArtifactoryProcess.groovy [--dry-run] [--full-log] --function <func> --value <val> --web-server http://YourWebServer/ --repository libs-release-local --domain <com/YourOrg> Version1 ...");
             parser.printUsage(System.err);
             System.err.println();
             System.err.println("  Example: groovy ArtifactoryProcess.groovy"+parser.printExample(ExampleMode.ALL)+" 1.0.1 1.0.2");
@@ -189,6 +193,10 @@ class ArtifactoryProcess {
             else {
                 processRepo();
             }
+            if( function == 'size' ) {
+                int sizeM = overAllSize / 1000000;
+                println "Size on ${ domain } was ${ sizeM } megabtyes."; }
+
         }
     }
 
@@ -278,7 +286,7 @@ class ArtifactoryProcess {
         if( noValue( webServer ) || noValue( userName ) || noValue( password ) || noValue( repoName ) ) {
             throw new CmdLineException( "${prefix}You must provide the webServer, userName, password and repository name values to use." );
         }
-        if( versionsToUse.size() == 0 && stateSet.size() == 0 && function != 'repoPrint' ) {
+        if( versionsToUse.size() == 0 && stateSet.size() == 0 && function != 'repoPrint' && function != 'size' ) {
             throw new CmdLineException( "${prefix}You must provide maxInState or a list of artifacts / versions to act upon." );
         }
 
@@ -312,38 +320,46 @@ class ArtifactoryProcess {
      */
     private int processArtifactsRecursive( String path ) {
         ItemHandle item = repo.folder( path );
-//        def RC = item.isFolder();    This lies, always returns true even for a file, go figure!
-//        def RC = path.endsWith('.xml');  // item.info() fails for simple files, go figure!
-        if( !path.endsWith( '.xml' ) &&
-            !path.endsWith( '.jar' ) &&
-            item.isFolder() ) {
-            Folder fldr;
-            try{
-                fldr = item.info()
-            } catch( Exception e ) {
-                println( "Error accessing $webServer/$repoName/$path" );
-                throw( e );
-            };
-
-            for( kid in fldr.children ) {
-                boolean processed = false;
-                if( stateSet.size() > 0 ) {
-                    if( isEndNode( kid.uri )) {
-                        processed = groupFolders( path + kid.uri );
-                    }
+        Folder fldr;
+        try{
+            fldr = item.info()
+        } catch( Exception e ) {
+            println( "Error accessing $webServer/$repoName/$path" );
+            throw( e );
+        };
+        
+        for( kid in fldr.children ) {
+            boolean processed = false;
+            if( function == 'size' ) {
+                boolean a = kid.folder;
+                if( kid.folder ) {
+                    processArtifactsRecursive(path + kid.uri);
                 } else {
-                    versionsToUse.find { version ->
-                        if( kid.uri.startsWith( '/' + version ) ) {
-                            numProcessed += processItem( path + kid.uri );
-                            return true; // Once we find a match, no others are interesting, we are outta here
-                        } else return false; // Just formalize the on to next iterator
-                    }
+                    processSize(path + kid.uri);
                 }
-                if( !processed ) {
-                    processArtifactsRecursive( path + kid.uri );
+                if( domain == path ) {
+                    int sizeM = thisSize / 1000000;
+                    println "Size on ${path + kid.uri} was ${sizeM} megabytes.";
+                    overAllSize += thisSize;
+                    thisSize = 0;
+                }
+                processed = true;
+            }
+            if( stateSet.size() > 0 ) {
+                if( isEndNode(kid.uri) ) {
+                    processed = groupFolders(path + kid.uri);
+                }
+            } else {
+                versionsToUse.find { version ->
+                    if (kid.uri.startsWith('/' + version)) {
+                        numProcessed += processItem(path + kid.uri);
+                        return true; // Once we find a match, no others are interesting, we are outta here
+                    } else return false; // Just formalize the on to next iterator
                 }
             }
-
+            if( !processed && kid.folder ) {
+                processArtifactsRecursive(path + kid.uri);
+            }
         }
 
         /* If we are counting number in each state, our lists should be all set now */
@@ -416,6 +432,16 @@ class ArtifactoryProcess {
             }
         }
         return true;
+    }
+
+    private boolean processSize( String path ) {
+        org.jfrog.artifactory.client.impl.ItemHandleImpl folder = repo.folder( path );
+        boolean isJar = path.endsWith( '.jar' );
+        if( isJar  ) {
+            org.jfrog.artifactory.client.impl.ItemHandleImpl item = repo.file( path );
+            org.jfrog.artifactory.client.model.impl.FileImpl file = item.info();
+            thisSize += file.size;
+        }
     }
 
     private int processItem( String path ) {

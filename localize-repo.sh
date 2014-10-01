@@ -91,51 +91,63 @@ whichFlavor(){
     fi
 }
 
+build_and_tag(){
+    docker build --tag=$artifactoryRegistry/$destinationRepositoryName${tag:+:}${tag} work
+    docker push $artifactoryRegistry/$destinationRepositoryName${tag:+:}${tag}
+    rm -rf work
+}
+
 localize-centos(){
     local repo=$1
     local tag=$2
     local hash=$3
 
-    mkdir -p work/etc/yum.repos.d
+    mkdir -p work/{tmp,etc/yum.repos.d}
 
     curl http://artifactory.win.jfrog.local:8081/artifactory/rpm-local/develop.repo -o work/etc/yum.repos.d/develop.repo
     sed -i '/enabled/ d;$ ienabled=0' work/etc/yum.repos.d/develop.repo
     curl http://artifactory.win.jfrog.local:8081/artifactory/rpm-local/release.repo -o work/etc/yum.repos.d/release.repo
     sed -i '/enabled/ d;$ ienabled=1' work/etc/yum.repos.d/release.repo
 
-    cat >>work/tmp/fetchepel.sh <<EOF1
-#!/bin/bash
+    cat >work/tmp/fetchepel.sh <<-"EOF1"
+        #!/bin/bash
+        distro=$(sed -n 's/^distroverpkg=//p' /etc/yum.conf)
+        releasever=$(rpm -q --qf "%{version}" -f /etc/$distro)
+        basearch=$(rpm -q --qf "%{arch}" -f /etc/$distro)
 
-distro=$(sed -n 's/^distroverpkg=//p' /etc/yum.conf)
-releasever=$(rpm -q --qf "%{version}" -f /etc/$distro)
-basearch=$(rpm -q --qf "%{arch}" -f /etc/$distro)
-
-cat >/etc/yum.repos.d/epel.repo <<EOF
-
+        cat >/etc/yum.repos.d/tmp.repo <<-EOF
+[tmp]
+name=epel temp repo
+baseurl=http://artifactory:8081/artifactory/fedora/epel/$releasever/$basearch
+gpgcheck=0
 EOF
+        yum --disablerepo=* --enablerepo=tmp install -y epel-release
+        yum --disablerepo=* --enablerepo=tmp clean all
+        rm /etc/yum.repos.d/tmp.repo
 EOF1
     chmod +x work/tmp/fetchepel.sh
 
     cat >work/Dockerfile <<EOF
-FROM $repo:$tag
+FROM $artifactoryRegistry/$repositoryName:$tag
 MAINTAINER jayd@jfrog.com
+
+COPY tmp /tmp
+RUN /tmp/fetchepel.sh
 RUN sed -i "\
     /^mirror/ s/^/#/; \
     s/^#base/base/; \
-    /baseurl/ s%mirror.centos.org%artifactory:8081/artifactory%; \
+    /baseurl/ s%\(mirror.centos.org\|download.fedoraproject.org/pub\)%artifactory:8081/artifactory%; \
     s%file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS%http://artifactory:8081/artifactory/centos/RPM-GPG-KEY-CentOS%; \
+    s%file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL%http://artifactory:8081/artifactory/fedora/epel/RPM-GPG-KEY-EPEL%; \
     " /etc/yum.repos.d/*.repo
 COPY etc /etc
-COPY tmp /tmp
-RUN /tmp/fetchepel.sh
 
 CMD "/bin/bash"
 
 EOF
 
-    docker build --tag=$repo${tag:+:}${tag} work
-    docker push $repo${tag:+:}${tag}
-    rm -rf work
+    build_and_tag
+
 }
 
 localize-fedora(){
@@ -165,9 +177,8 @@ CMD "/bin/bash"
 
 EOF
 
-    docker build --tag=$repo${tag:+:}${tag} work
-    docker push $repo${tag:+:}${tag}
-    rm -rf work
+    build_and_tag
+
 }
 
 localize-ubuntu(){
@@ -186,9 +197,7 @@ CMD "/bin/bash"
 
 EOF
 
-    docker build --tag=$repo${tag:+:}${tag} work
-    docker push $repo${tag:+:}${tag}
-    rm -rf work
+    build_and_tag
 }
 
 process(){

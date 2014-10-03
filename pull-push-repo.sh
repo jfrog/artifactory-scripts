@@ -37,7 +37,7 @@ EOF
 parse(){
 
 
-    local PARM=$(getopt -o a::r:l:t:nfhn0 \
+    local PARM=$(getopt -o a:r:l:t:nfhn0 \
         --long 'artifactory','remote','local','tag','noupdate','force','help','name','prefix' \
         -n "$(basename $0)" -- "$@" )
 

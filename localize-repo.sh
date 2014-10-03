@@ -191,7 +191,7 @@ localize-ubuntu(){
     cat >work/Dockerfile <<EOF
 FROM $repo:$tag
 MAINTAINER jayd@jfrog.com
-RUN sed -i 's%archive.ubuntu.com%artifactory:8081/artifactory%' /etc/apt/sources.list /etc/apt/sources.list.d/*
+RUN sed -i 's%archive.ubuntu.com%artifactory:8081/artifactory%' \$(find /etc/apt/sources.list* -name *list)
 RUN apt-key adv --recv-key --keyserver keyserver.ubuntu.com 40976EAF437D05B5
 CMD "/bin/bash"
 

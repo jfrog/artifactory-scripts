@@ -353,6 +353,7 @@ class ArtifactoryProcess {
                 versionsToUse.find { version ->
                     if (kid.uri.startsWith('/' + version)) {
                         numProcessed += processItem(path + kid.uri);
+                        processed = true;
                         return true; // Once we find a match, no others are interesting, we are outta here
                     } else return false; // Just formalize the on to next iterator
                 }
@@ -475,7 +476,6 @@ class ArtifactoryProcess {
                             for( id in dlJar ) { lclJar.write( id ); } // Copy contents
                             if( fullLog ) println( "Downloaded ${path + kid.uri} to ${targetDir + kid.uri}." );
                             retVal++;
-                            return true;
                         }
                     }
                 }

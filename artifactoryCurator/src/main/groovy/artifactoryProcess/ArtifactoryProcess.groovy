@@ -231,7 +231,7 @@ class ArtifactoryProcess {
                 if( cols.containsKey( 'maxInState' ) && !noValue( csvRec.maxInState ) ) maxInState = csvRec.maxInState;
                 if( cols.containsKey( 'webServer'  ) && !noValue( csvRec.webServer  ) ) webServer  = csvRec.webServer ;
                 if( cols.containsKey( 'repoName'   ) && !noValue( csvRec.repoName   ) ) repoName   = csvRec.repoName  ;
-                if( cols.containsKey( 'domain'     ) && !noValue( csvRec.domain     ) ) repoName   = csvRec.domain    ;
+                if( cols.containsKey( 'domain'     ) && !noValue( csvRec.domain     ) ) domain     = csvRec.domain    ;
                 if( cols.containsKey( 'userName'   ) && !noValue( csvRec.userName   ) ) userName   = csvRec.userName  ;
                 if( cols.containsKey( 'password'   ) && !noValue( csvRec.password   ) ) password   = csvRec.password  ;
                 if( cols.containsKey( 'mustHave'   ) ) mustHave   = csvRec.mustHave; // Can clear out mustHave value

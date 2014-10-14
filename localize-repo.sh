@@ -104,9 +104,9 @@ localize-centos(){
 
     mkdir -p work/{tmp,etc/yum.repos.d}
 
-    curl http://artifactory.win.jfrog.local:8081/artifactory/rpm-local/develop.repo -o work/etc/yum.repos.d/develop.repo
+    curl http://artifactory/artifactory/rpm-local/develop.repo -o work/etc/yum.repos.d/develop.repo
     sed -i '/enabled/ d;$ ienabled=0' work/etc/yum.repos.d/develop.repo
-    curl http://artifactory.win.jfrog.local:8081/artifactory/rpm-local/release.repo -o work/etc/yum.repos.d/release.repo
+    curl http://artifactory/artifactory/rpm-local/release.repo -o work/etc/yum.repos.d/release.repo
     sed -i '/enabled/ d;$ ienabled=1' work/etc/yum.repos.d/release.repo
 
     cat >work/tmp/fetchepel.sh <<-"EOF1"
@@ -118,11 +118,12 @@ localize-centos(){
         cat >/etc/yum.repos.d/tmp.repo <<-EOF
 [tmp]
 name=epel temp repo
-baseurl=http://artifactory:8081/artifactory/fedora/epel/$releasever/$basearch
+baseurl=http://artifactory/artifactory/fedora/epel/$releasever/$basearch
 gpgcheck=0
 EOF
         yum --disablerepo=* --enablerepo=tmp install -y epel-release
         yum --disablerepo=* --enablerepo=tmp clean all
+
         rm /etc/yum.repos.d/tmp.repo
 EOF1
     chmod +x work/tmp/fetchepel.sh
@@ -136,9 +137,9 @@ RUN /tmp/fetchepel.sh
 RUN sed -i "\
     /^mirror/ s/^/#/; \
     s/^#base/base/; \
-    /baseurl/ s%\(mirror.centos.org\|download.fedoraproject.org/pub\)%artifactory:8081/artifactory%; \
-    s%file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS%http://artifactory:8081/artifactory/centos/RPM-GPG-KEY-CentOS%; \
-    s%file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL%http://artifactory:8081/artifactory/fedora/epel/RPM-GPG-KEY-EPEL%; \
+    /baseurl/ s%\(mirror.centos.org\|download.fedoraproject.org/pub\)%artifactory/artifactory%; \
+    s%file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS%http://artifactory/artifactory/centos/RPM-GPG-KEY-CentOS%; \
+    s%file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL%http://artifactory/artifactory/fedora/epel/RPM-GPG-KEY-EPEL%; \
     " /etc/yum.repos.d/*.repo
 COPY etc /etc
 
@@ -157,9 +158,9 @@ localize-fedora(){
 
     mkdir -p work/{etc/yum.repos.d,tmp}
 
-    curl http://artifactory.win.jfrog.local:8081/artifactory/rpm-local/develop.repo -o work/etc/yum.repos.d/develop.repo
+    curl http://artifactory.win.jfrog.local/artifactory/rpm-local/develop.repo -o work/etc/yum.repos.d/develop.repo
     sed -i '/enabled/ d;$ ienabled=0' work/etc/yum.repos.d/develop.repo
-    curl http://artifactory.win.jfrog.local:8081/artifactory/rpm-local/release.repo -o work/etc/yum.repos.d/release.repo
+    curl http://artifactory.win.jfrog.local/artifactory/rpm-local/release.repo -o work/etc/yum.repos.d/release.repo
     sed -i '/enabled/ d;$ ienabled=1' work/etc/yum.repos.d/release.repo
 
     cat >work/Dockerfile <<EOF
@@ -168,8 +169,8 @@ MAINTAINER jayd@jfrog.com
 RUN sed -i "\
     /^mirror/ s/^/#/; \
     s/^#base/base/; \
-    /baseurl/ s%download.fedoraproject.org/pub%artifactory:8081/artifactory/fedora%; \
-    s%file:///etc/pki/rpm-gpg/%http://artifactory:8081/artifactory/centos/%; \
+    /baseurl/ s%download.fedoraproject.org/pub%artifactory/artifactory/fedora%; \
+    s%file:///etc/pki/rpm-gpg/%http://artifactory/artifactory/centos/%; \
     " /etc/yum.repos.d/*.repo
 COPY etc /etc
 
@@ -191,7 +192,7 @@ localize-ubuntu(){
     cat >work/Dockerfile <<EOF
 FROM $repo:$tag
 MAINTAINER jayd@jfrog.com
-RUN sed -i 's%archive.ubuntu.com%artifactory:8081/artifactory%' \$(find /etc/apt/sources.list* -name *list)
+RUN sed -i 's%archive.ubuntu.com%artifactory/artifactory%' \$(find /etc/apt/sources.list* -name *list)
 RUN apt-key adv --recv-key --keyserver keyserver.ubuntu.com 40976EAF437D05B5
 CMD "/bin/bash"
 

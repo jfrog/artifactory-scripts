@@ -205,7 +205,7 @@ process(){
 
     docker pull ${artifactoryRegistry}/${repositoryName}${specificTag:+:}${specificTag} >/dev/null
     docker images $artifactoryRegistry/$repositoryName |\
-        awk "(NR > 2 && \"$specificTag\" == \"\") || (\"$specificTag\" != \"\" && /$specificTag/) {print \$1 \" \" \$2 \" \" \$3}" | while read repo tag hash; do
+        awk "(NR > 1 && \"$specificTag\" == \"\") || (\"$specificTag\" != \"\" && /$specificTag/) {print \$1 \" \" \$2 \" \" \$3}" | while read repo tag hash; do
         echo $repo $tag $hash
         [[ $repo == *$artifactoryRegistry* ]] || continue;
         whichFlavor $hash

@@ -29,3 +29,6 @@ tramp
 
 # AUCTeX auto folder
 /auto/
+
+*/*Cache/*
+*.log

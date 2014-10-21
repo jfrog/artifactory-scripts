@@ -201,6 +201,24 @@ EOF
     build_and_tag
 }
 
+localize-debian(){
+    local repo=$1
+    local tag=$2
+    local hash=$3
+
+    mkdir -p work
+
+    cat >work/Dockerfile <<EOF
+FROM $repo:$tag
+MAINTAINER jayd@jfrog.com
+RUN sed -i 's%http.debian.net%artifactory/artifactory%' \$(find /etc/apt/sources.list* -name *list)
+CMD "/bin/bash"
+
+EOF
+
+    build_and_tag
+}
+
 process(){
 
     docker pull ${artifactoryRegistry}/${repositoryName}${specificTag:+:}${specificTag} >/dev/null

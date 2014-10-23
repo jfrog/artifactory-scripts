@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x 
+
 artifactoryRegistry=
 repositoryName=fedora
 
@@ -11,6 +13,7 @@ forceUpdate=false
 localRepoName=
 localPrefix=my
 flavor=
+yumRepo=
 
 [ -x ~/.jfrog/docker.rc ] && . ~/.jfrog/docker.rc
 
@@ -32,6 +35,7 @@ help(){
         -p --prefix         Prefix to add to local repository   defaults to: $localPrefix
         -l --local          Local image name                    defaults to: remote image name with prefix
         -t --tag            Specific tag to localize            defaults to: all tags for that image
+        -y --yum            URL of local yum repository         no default
         -n --noupdate       Don\'t update the local artifactory defaults to: false
         -f --force          Force the update to overwrite       defaults to: false
 EOF
@@ -52,6 +56,7 @@ parse(){
             -a|--artifactory) artifactoryRegistry=$2; shift 2 ;;
             -r|--remote) repositoryName=$2; shift 2 ;;
             -l|--local) destinationRepositoryName=$2; shift 2 ;;
+	    -y|--yum) yumRepo=$2; shift 2 ;;
             -t|--tag) specificTag=$2; shift 2 ;;
             -n|--noupdate) noUpdate=true; shift ;;
             -f|--force) forceUpdate=true; shift ;;
@@ -79,7 +84,7 @@ whichFlavor(){
     local image="$1"
     local container="tmp.$$"
     local release=""
-    if   release=$(docker run --rm $image cat /etc/os-release 2>/dev/null || \
+    if  release=$(docker run --rm $image cat /etc/os-release 2>/dev/null || \
                    docker run --rm $image cat /etc/redhat-release 2>/dev/null ); then
         release=$(echo $release | tr A-Z a-z)
         flavor=$( ( [[ $release == *ubuntu* ]] && echo "ubuntu" ) || \
@@ -104,21 +109,22 @@ localize-centos(){
 
     mkdir -p work/{tmp,etc/yum.repos.d}
 
-    curl http://artifactory/artifactory/rpm-local/develop.repo -o work/etc/yum.repos.d/develop.repo
+    curl $yumRepo/rpm-local/develop.repo -o work/etc/yum.repos.d/develop.repo
     sed -i '/enabled/ d;$ ienabled=0' work/etc/yum.repos.d/develop.repo
-    curl http://artifactory/artifactory/rpm-local/release.repo -o work/etc/yum.repos.d/release.repo
+    curl $yumRepo/rpm-local/release.repo -o work/etc/yum.repos.d/release.repo
     sed -i '/enabled/ d;$ ienabled=1' work/etc/yum.repos.d/release.repo
 
-    cat >work/tmp/fetchepel.sh <<-"EOF1"
+    cat >work/tmp/fetchepel.sh <<-EOF1
         #!/bin/bash
-        distro=$(sed -n 's/^distroverpkg=//p' /etc/yum.conf)
-        releasever=$(rpm -q --qf "%{version}" -f /etc/$distro)
-        basearch=$(rpm -q --qf "%{arch}" -f /etc/$distro)
+set -x
+        distro=\$(sed -n 's/^distroverpkg=//p' /etc/yum.conf)
+        releasever=\$(rpm -q --qf "%{version}" -f /etc/\$distro)
+        basearch=\$(rpm -q --qf "%{arch}" -f /etc/\$distro)
 
         cat >/etc/yum.repos.d/tmp.repo <<-EOF
 [tmp]
 name=epel temp repo
-baseurl=http://artifactory/artifactory/fedora/epel/$releasever/$basearch
+baseurl=$yumRepo/fedora/epel/\$releasever/\$basearch
 gpgcheck=0
 EOF
         yum --disablerepo=* --enablerepo=tmp install -y epel-release
@@ -138,8 +144,8 @@ RUN sed -i "\
     /^mirror/ s/^/#/; \
     s/^#base/base/; \
     /baseurl/ s%\(mirror.centos.org\|download.fedoraproject.org/pub\)%artifactory/artifactory%; \
-    s%file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS%http://artifactory/artifactory/centos/RPM-GPG-KEY-CentOS%; \
-    s%file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL%http://artifactory/artifactory/fedora/epel/RPM-GPG-KEY-EPEL%; \
+    s%file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS%$yumRepo/centos/RPM-GPG-KEY-CentOS%; \
+    s%file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL%$yumRepo/fedora/epel/RPM-GPG-KEY-EPEL%; \
     " /etc/yum.repos.d/*.repo
 COPY etc /etc
 
@@ -158,9 +164,9 @@ localize-fedora(){
 
     mkdir -p work/{etc/yum.repos.d,tmp}
 
-    curl http://artifactory/artifactory/rpm-local/develop.repo -o work/etc/yum.repos.d/develop.repo
+    curl $yumRepo/rpm-local/develop.repo -o work/etc/yum.repos.d/develop.repo
     sed -i '/enabled/ d;$ ienabled=0' work/etc/yum.repos.d/develop.repo
-    curl http://artifactory/artifactory/rpm-local/release.repo -o work/etc/yum.repos.d/release.repo
+    curl $yumRepo/rpm-local/release.repo -o work/etc/yum.repos.d/release.repo
     sed -i '/enabled/ d;$ ienabled=1' work/etc/yum.repos.d/release.repo
 
     cat >work/Dockerfile <<EOF
@@ -170,7 +176,7 @@ RUN sed -i "\
     /^mirror/ s/^/#/; \
     s/^#base/base/; \
     /baseurl/ s%download.fedoraproject.org/pub%artifactory/artifactory/fedora%; \
-    s%file:///etc/pki/rpm-gpg/%http://artifactory/artifactory/centos/%; \
+    s%file:///etc/pki/rpm-gpg/%$yumRepo/centos/%; \
     " /etc/yum.repos.d/*.repo
 COPY etc /etc
 

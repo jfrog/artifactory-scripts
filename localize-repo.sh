@@ -158,9 +158,9 @@ localize-fedora(){
 
     mkdir -p work/{etc/yum.repos.d,tmp}
 
-    curl http://artifactory.win.jfrog.local/artifactory/rpm-local/develop.repo -o work/etc/yum.repos.d/develop.repo
+    curl http://artifactory/artifactory/rpm-local/develop.repo -o work/etc/yum.repos.d/develop.repo
     sed -i '/enabled/ d;$ ienabled=0' work/etc/yum.repos.d/develop.repo
-    curl http://artifactory.win.jfrog.local/artifactory/rpm-local/release.repo -o work/etc/yum.repos.d/release.repo
+    curl http://artifactory/artifactory/rpm-local/release.repo -o work/etc/yum.repos.d/release.repo
     sed -i '/enabled/ d;$ ienabled=1' work/etc/yum.repos.d/release.repo
 
     cat >work/Dockerfile <<EOF

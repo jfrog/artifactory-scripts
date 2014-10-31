@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -x 
-
 artifactoryRegistry=
 repositoryName=fedora
 
@@ -198,7 +196,7 @@ localize-ubuntu(){
     cat >work/Dockerfile <<EOF
 FROM $repo:$tag
 MAINTAINER jayd@jfrog.com
-RUN sed -i 's%archive.ubuntu.com%artifactory/artifactory%' \$(find /etc/apt/sources.list* -name *list)
+RUN sed -i 's%[a-z.]*archive.ubuntu.com%artifactory/artifactory%' \$(find /etc/apt/sources.list* -name *list)
 RUN apt-key adv --recv-key --keyserver keyserver.ubuntu.com 40976EAF437D05B5
 CMD "/bin/bash"
 

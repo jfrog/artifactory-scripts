@@ -1,0 +1,7 @@
+#!/bin/sh 
+export NDBG_JAVA="$JAVA_OPTS"
+export JAVA_OPTS="-Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=4444,suspend=y $JAVA_OPTS"
+#echo $JAVA_OPTS
+groovy "$@"
+export JAVA_OPTS="$NDBG_JAVA"
+

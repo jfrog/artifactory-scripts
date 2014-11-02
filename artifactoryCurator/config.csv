@@ -1,0 +1,4 @@
+function,value,mustHave,maxInState,comment
+size,,,,
+delete,,deletable,MaxInState.csv,only columns of interest required
+mark,deletable,,MaxInState.csv,columns can be in any order

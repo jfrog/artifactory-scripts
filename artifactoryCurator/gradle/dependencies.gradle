@@ -1,0 +1,6 @@
+ext {
+    commonVersions = [
+        groovy: "2.3.0",
+        slf4j: "1.7.7",
+    ]
+}

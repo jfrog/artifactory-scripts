@@ -69,7 +69,7 @@ import com.xlson.groovycsv.CsvParser;
 
 class ArtifactoryProcess {
     public static final Set< String > validFunctions = [ 'mark', 'delete', 'clear', 'download', 'config', 'repoPrint', 'size' ];
-    public static final Set< String > validParameters = [ 'function', 'value', 'mustHave', 'targetDir', 'maxInState', 'webServer', 'repoName', 'domain', 'userName', 'password' ];
+    public static final Set< String > validParameters = [ 'function', 'value', 'mustHave', 'targetDir', 'maxInState', 'webServer', 'repoName', 'domain', 'userName', 'password', 'maxDays', 'minDays' ];
 
     @Option(name='--dry-run', usage='Don\'t change anything; just list what would be done')
     boolean dryRun;
@@ -82,7 +82,7 @@ class ArtifactoryProcess {
     String function;
 
 //  eg  --value production
-    @Option(name='--value', metaVar='value', usage="value to use with function above, often required")
+    @Option(name='--value', metaVar='value', usage="value to use with certain functions, often required")
     String value;
 
 //  eg  --must-have releasable
@@ -96,6 +96,18 @@ class ArtifactoryProcess {
 //  eg  --maxInState MaxInState.csv
     @Option(name='--maxInState', metaVar='maxInState', usage="name of csv file with states and max counts, optional")
     String maxInState;
+
+//  eg  --maxDay 14
+    @Option(name='--maxDays', metaVar='maxDays', usage="max days to mark / delete artifact (ignores counts), optional")
+    Float maxDays = 0;
+
+//  eg  --minDay 3
+    @Option(name='--minDays', metaVar='minDays', usage="min days before mark / delete artifacts (ignores counts), optional")
+    Float minDays = 0;
+
+//  eg  --offsetDays 1
+    @Option(name='--offsetDays', metaVar='offsetDays', usage="offset for min and max days to adjust for marking delays")
+    Float offsetDays = 0;
 
 //  eg  --web-server 'http://artifactory01/'
     @Option(name='--web-server', metaVar='webServer', usage='URL to use to access Artifactory server')
@@ -120,6 +132,11 @@ class ArtifactoryProcess {
     @Argument
     ArrayList<String> versionsToUse = new ArrayList<String>();
 
+    class Branch{
+        String branchName;
+        List< PathAndDate > pathAndDate;
+    }
+
     class PathAndDate{
         String path;
         Date dtCreated;
@@ -127,7 +144,10 @@ class ArtifactoryProcess {
     class StateRecord {
         String state;
         int cnt;
-        List< PathAndDate > pathAndDate;
+        float minDays;
+        float maxDays;
+        String divider;
+        List< Branch > branches;
     }
 
     @SuppressWarnings(["SystemExit", "CatchThrowable"])
@@ -222,9 +242,9 @@ class ArtifactoryProcess {
             for( csvRec in csvIt ) {
                 if (fullLog) println("Step is ${csvRec}");
                 Map cols = csvRec.properties.columns;
-                String func = csvRec.function;
-                def hasFunc = cols.containsKey( 'function' );
-                def has = cols.containsKey( 'targetDir' );
+//                String func = csvRec.function;
+//                def hasFunc = cols.containsKey( 'function' );
+//                def has = cols.containsKey( 'targetDir' );
                 if( cols.containsKey( 'function'   ) && !noValue( csvRec.function   ) ) function   = csvRec.function  ;
                 if( cols.containsKey( 'value'      ) && !noValue( csvRec.value      ) ) value      = csvRec.value     ;
                 if( cols.containsKey( 'targetDir'  ) && !noValue( csvRec.targetDir  ) ) targetDir  = csvRec.targetDir ;
@@ -235,6 +255,11 @@ class ArtifactoryProcess {
                 if( cols.containsKey( 'userName'   ) && !noValue( csvRec.userName   ) ) userName   = csvRec.userName  ;
                 if( cols.containsKey( 'password'   ) && !noValue( csvRec.password   ) ) password   = csvRec.password  ;
                 if( cols.containsKey( 'mustHave'   ) ) mustHave   = csvRec.mustHave; // Can clear out mustHave value
+                if( cols.containsKey( 'minDays'   ) )  minDays    = csvRec.minDays;    // Can clear out mustHave value
+                if( cols.containsKey( 'maxDays'   ) )  maxDays    = csvRec.maxDays;    // Can clear out mustHave value
+
+//                if( minDays == null ) minDays = 0;
+//                if( maxDays == null ) maxDays = 0;
 
                 checkParms();
                 withClient { newClient ->
@@ -247,24 +272,9 @@ class ArtifactoryProcess {
     }
 
     def checkParms() {
-        if( !noValue( maxInState ) ) {
-            stateSet.clear();                         // Throw away any previous states from last step
-            File stateFile = new File( maxInState );
-            def RC = stateFile.withReader {
-                CsvIterator csvFile = CsvParser.parseCsv( it );
-                for( csvRec in csvFile ) {
-                    String state = csvRec.properties.values[ 0 ];
-                    String strCnt = csvRec.properties.values[ 1 ];
-                    if( fullLog ) println( "State ${state} allowed ${strCnt}" );
-                    int count = 0;
-                    if( strCnt.integer ) count = strCnt.toInteger();
-                    if( count < 0 ) count = 0;
-                    // Iterator lies and claims there is a next when there isn't.  Force break on empty state.
-                    stateSet.add( new StateRecord( state: state, cnt: count, pathAndDate: [] ) );
-                }
-            }
-        }
+        statesFile();  // Process any maxInState file.
         String prefix;
+
         if( firstFunction == 'config' && function != 'config' ) {
             prefix = "While processing ${lastConfig} encountered, ";
         } else prefix = '';
@@ -288,6 +298,56 @@ class ArtifactoryProcess {
         }
         if( versionsToUse.size() == 0 && stateSet.size() == 0 && function != 'repoPrint' && function != 'size' ) {
             throw new CmdLineException( "${prefix}You must provide maxInState or a list of artifacts / versions to act upon." );
+        }
+        if( offsetDays == null || offsetDays < 0 ) {
+            throw new CmdLineException( "${prefix}offsetDays of ${offsetDays}, must be number greater than zero." );
+        }
+        if( maxDays == null || maxDays < 0 ) {
+            throw new CmdLineException( "${prefix}maxDays of ${maxDays}, must be number greater than zero." );
+        }
+        if( minDays == null || minDays < 0 ) {
+            throw new CmdLineException( "${prefix}minDays of ${minDays}, must be number greater than zero." );
+        }
+
+    }
+    void statesFile() {  // Process any maxInState file.
+        if( !noValue( maxInState ) ) {
+            stateSet.clear();                         // Throw away any previous states from last step
+            if( fullLog ) println( "Parsing ${maxInState}." )
+            File stateFile = new File( maxInState );
+            def RC = stateFile.withReader {
+                CsvIterator csvFile = CsvParser.parseCsv( it );
+                for( csvRec in csvFile ) {
+
+                    /* Set up default values for this new record. */
+
+                    String state = "";
+                    int count = 0;
+                    float myMinDays = minDays;
+                    float myMaxDays = maxDays;
+                    String divider = "";
+
+                    /* Pull out any values provided (templated code). */
+
+                    Map cols = csvRec.properties.columns;
+//                  def hasState = cols.containsKey( 'state' );  // Useful if exploring csv objects
+                    if( cols.containsKey( 'State'   ) && !noValue( csvRec.State   ) ) state      = csvRec.State     ;
+                    if( cols.containsKey( 'Divider' ) && !noValue( csvRec.Divider ) ) divider    = csvRec.Divider   ;
+                    if( cols.containsKey( 'Count'   ) && !noValue( csvRec.Count   ) && csvRec.Count.integer ) count      = csvRec.Count.toInteger();   ;
+                    if( cols.containsKey( 'MinDays' ) && !noValue( csvRec.MinDays ) && csvRec.MinDays.float ) myMinDays    = csvRec.MinDays.toFloat() - offsetDays;   ;
+                    if( cols.containsKey( 'MaxDays' ) && !noValue( csvRec.MaxDays ) && csvRec.MaxDays.float ) myMaxDays    = csvRec.MaxDays.toFloat() - offsetDays;   ;
+                    if( count < 0 ) count = 0;
+                    if( myMinDays < 0 ) myMinDays = 0;
+                    if( myMaxDays < 0 ) myMaxDays = 0;
+
+                    List branches = [];
+
+                    if( fullLog ) println( "State ${state} allowed ${count} within ${myMinDays} and ${myMaxDays} days, branches by ${divider}" );
+                    // Iterator lies and claims there is a next when there isn't.  Force break on empty state.
+                    stateSet.add(
+                            new StateRecord( state: state, divider: divider, cnt: count, minDays: myMinDays, maxDays: myMaxDays, branches: branches ) );
+                }
+            }
         }
 
     }
@@ -321,6 +381,7 @@ class ArtifactoryProcess {
     private int processArtifactsRecursive( String path ) {
         ItemHandle item = repo.folder( path );
         Folder fldr;
+        Boolean foundEndNode = false;
         try{
             fldr = item.info()
         } catch( Exception e ) {
@@ -331,11 +392,11 @@ class ArtifactoryProcess {
         for( kid in fldr.children ) {
             boolean processed = false;
             if( function == 'size' ) {
-                boolean a = kid.folder;
+//                boolean a = kid.folder;
                 if( kid.folder ) {
-                    processArtifactsRecursive(path + kid.uri);
+                    processArtifactsRecursive( path + kid.uri );
                 } else {
-                    processSize(path + kid.uri);
+                    processSize( path + kid.uri );
                 }
                 if( domain == path ) {
                     int sizeM = thisSize / 1000000;
@@ -346,8 +407,9 @@ class ArtifactoryProcess {
                 processed = true;
             }
             if( stateSet.size() > 0 ) {
-                if( isEndNode(kid.uri) ) {
-                    processed = groupFolders(path + kid.uri);
+                if( isEndNode( kid.uri ) ) {
+                    foundEndNode = true;
+                    processed = putInGroup(path + kid.uri);
                 }
             } else {
                 versionsToUse.find { version ->
@@ -365,7 +427,7 @@ class ArtifactoryProcess {
 
         /* If we are counting number in each state, our lists should be all set now */
 
-        if( stateSet.size() > 0 ) {
+        if( foundEndNode && stateSet.size() > 0 ) {
             processSet();
         }
 
@@ -395,20 +457,42 @@ class ArtifactoryProcess {
     }
 
 
-    private boolean groupFolders( String path ) {
+    private boolean putInGroup( String path ) {
         Map<String, List<String>> props;
-        stateSet.find { rec ->
+    //  stateSet.find { rec ->     // Find doesn't reset with next end node, back to basics
+        for( rec in stateSet ) {
             ItemHandle folder = repo.folder( path );
-            if( rec.state.size() > 0 ) {
+            if( rec.state.size() > 0 ) {  // If this is not the last catch all category (empty string)
                 props = folder.getProperties( rec.state );
             }
-            if( rec.state.size() <= 0 || props.size() > 0 ) {
+            if( rec.state.size() == 0 || props.size() > 0 ) { // If last entry or found match
+
+                /* Create a record for this artifact. */
+
                 PathAndDate nodePathDate = new PathAndDate();
                 nodePathDate.path = path;
                 nodePathDate.dtCreated = folder.info().lastModified;
-                rec.pathAndDate.add( nodePathDate );  // process this one
-                return true; // No others are interest, break out of iterator
-            } else return false;  // On to next iterator
+
+                /* Create / Find branch specific grouping if has a branch */
+
+                String sBranch = "";         // Assume no branch requested / found.
+                if( rec.divider != null && rec.divider.size() > 0 ) {
+                    Integer ndx = path.lastIndexOf( rec.divider );  // Do we have branch divider?
+                    if( ndx >= 0 && ndx + rec.divider.size() < path.size() ) {
+                        sBranch = path.substring(ndx + rec.divider.size());
+                    }
+                }
+                Branch branch = rec.branches.find { it.branchName == sBranch };
+                if( branch == null ) {
+                      branch = new Branch( branchName: sBranch, pathAndDate: [] );
+                      rec.branches.add( branch );
+                }
+
+                /* Now add this artifact into the right group */
+
+                branch.pathAndDate.add( nodePathDate );  // process this one
+                break;  // return true; // No other states matter if matched, break out of iterator
+            } // else return false;  // On to next iterator
 
         }
         return true;                              // We always process all nodes which are end nodes
@@ -416,27 +500,47 @@ class ArtifactoryProcess {
 
 
     private boolean processSet() {
-        for( set in stateSet ) {
-            int del = set.cnt;
-            if( set.pathAndDate.size() < del ) {
-                del = set.pathAndDate.size() }
-            else {
-                set.pathAndDate.sort() { a,b -> b.dtCreated <=> a.dtCreated };  // Sort newest first to preserve newest
-            }
-            while( del > 0 ) {
-                set.pathAndDate.remove( 0 );
-                del--;
-            }
-            while( set.pathAndDate.size() > 0 ) {
-                numProcessed += processItem( set.pathAndDate[ 0 ].path );
-                set.pathAndDate.remove( 0 );
+        for( state in stateSet ) {
+            for( set in state.branches ) {
+                int keep = state.cnt;
+                if( keep == 0 || set.pathAndDate.size() < keep ) {  // If count to keep is zero, keep all
+                    keep = set.pathAndDate.size()
+                } else {
+                    set.pathAndDate.sort() { a, b -> b.dtCreated <=> a.dtCreated };
+                    // Sort newest first to preserve newest
+                }
+//                def now = new Date();
+//                println 'Now is a ' + now.class.name + ' with value ' + now
+//                println 'dtCreated is a ' + set.pathAndDate[ 0 ].dtCreated.class.name + ' with value ' + set.pathAndDate[ 0 ].dtCreated
+//                Float diff = new Date() - set.pathAndDate[ 0 ].dtCreated;  // Compute age of artifact.
+                while( keep > 0 ) {
+//                    if( set.pathAndDate[ 0 ].dtCreated == null ) {
+//                        println "Whatsup with the null?"
+//                    }
+                    if( state.maxDays > 0 && state.state != "" && set.branchName != "" && // Check if qualifies for maxDays
+                        state.maxDays  < new Date() - set.pathAndDate[ 0 ].dtCreated ) { // Actual check for exceeding maxDays
+                        numProcessed += processItem(set.pathAndDate[ 0 ].path);
+                    }
+                    set.pathAndDate.remove(0);
+                    keep--;
+                }
+                while( set.pathAndDate.size() > 0 ) {
+                    if( set.pathAndDate[ 0 ].dtCreated == null ) {
+                        println "Whatsup with the null?"
+                    }
+                    if( state.minDays <= 0 ||            // Check if qualifies for minDays
+                        state.minDays  < new Date() - set.pathAndDate[ 0 ].dtCreated ) { // Actual check for qualifying minDays
+                        numProcessed += processItem(set.pathAndDate[0].path);
+                    }
+                    set.pathAndDate.remove(0);
+                }
             }
         }
         return true;
     }
 
     private boolean processSize( String path ) {
-        org.jfrog.artifactory.client.impl.ItemHandleImpl folder = repo.folder( path );
+//        org.jfrog.artifactory.client.impl.ItemHandleImpl folder = repo.folder( path );
         boolean isJar = path.endsWith( '.jar' );
         if( isJar  ) {
             org.jfrog.artifactory.client.impl.ItemHandleImpl item = repo.file( path );

@@ -1,0 +1,8 @@
+State,Count,MinDays,MaxDays,Divider,"Comment, 1st line is ignored, columns must be in order shown"
+Keep,,,,,"last line must have null first value, there can not be empty line at end"
+Rollback,5,,,,
+Deployed,5,,,,
+Approved,5,5,30,,
+Accepted,5,5,30,"-b_",
+InTest,5,5,14,"-b_",
+,5,3,14,"-b_","last line, first value must be empty string."

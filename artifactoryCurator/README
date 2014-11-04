@@ -5,21 +5,31 @@ groovy ArtifactoryProcess.groovy [--dry-run] [--full-log] --function <func> --va
  --dry-run               : Don't change anything; just list what would be done
  --full-log              : Log miscellaneous steps for processing artifacts
  --function function     : function to perform on artifacts
+ --maxDays maxDays       : max days to mark / delete artifact (ignores counts),
+                           optional
  --maxInState maxInState : name of csv file with states and max counts, optional
+ --minDays minDays       : min days before mark / delete artifacts (ignores
+                           counts), optional
  --must-have mustHave    : property required before applying delete, mark,
-                           download or clear, optional
+                           download, size or clear, optional
+ --offsetDays offsetDays : offset for min and max days to adjust for marking
+                           delays
  --password password     : Password to use to access Artifactory server.
  --repository repoName   : Name of the repository to scan.
  --targetDir targetDir   : target directory for downloaded artifacts
  --userName userName     : userName to use to access Artifactory server
- --value value           : value to use with function above, often required
+ --value value           : value to use with certain functions, often required
  --web-server webServer  : URL to use to access Artifactory server
 
-  Example: groovy ArtifactoryCleanup.groovy --domain domain --dry-run --full-log --function function --maxInState maxInState.csv --must-have mustHave --password password --repository repoName --targetDir targetDir --userName userName --value value --web-server webServer 1.0.1 1.0.2
+  Example: groovy ArtifactoryProcess.groovy --domain domain --dry-run --full-log 
+     --function function --maxDays maxDays --maxInState maxInState --minDays minDays
+     --must-have mustHave --offsetDays offsetDays --password password 
+     --repository repoName --targetDir targetDir --userName userName --value value
+     --web-server webServer 1.0.1 1.0.2
 
-  Supported functions include [clear, delete, config, download, mark, repoPrint, size]
-
-  Columns in config csv files can be [repoName, targetDir, maxInState, domain, value, userName, mustHave, webServer, password, function]
+  Columns in config csv files can be: 
+     [ repoName, targetDir, maxInState, domain, value, userName, mustHave, 
+       webServer, password, function, maxDays, minDays ]
 
 The ArtifactoryProcess script can be used in a couple of main modes as well as
 a sort of hyper mode.

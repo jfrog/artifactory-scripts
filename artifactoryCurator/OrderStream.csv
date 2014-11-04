@@ -1,0 +1,4 @@
+function,value,mustHave,maxInState,comment
+size,,,,
+delete,,deletable,OrderStreamStates.csv,only columns of interest required
+mark,deletable,,OrderStreamStates.csv,columns can be in any order

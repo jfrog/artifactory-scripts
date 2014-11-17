@@ -11,7 +11,8 @@ forceUpdate=false
 localRepoName=
 localPrefix=my
 flavor=
-yumRepo=
+pkgRepo=
+
 
 [ -x ~/.jfrog/docker.rc ] && . ~/.jfrog/docker.rc
 
@@ -33,7 +34,7 @@ help(){
         -p --prefix         Prefix to add to local repository   defaults to: $localPrefix
         -l --local          Local image name                    defaults to: remote image name with prefix
         -t --tag            Specific tag to localize            defaults to: all tags for that image
-        -y --yum            URL of local yum repository         no default
+        -i --install        URL of local package repository     no default
         -n --noupdate       Don\'t update the local artifactory defaults to: false
         -f --force          Force the update to overwrite       defaults to: false
 EOF
@@ -54,7 +55,7 @@ parse(){
             -a|--artifactory) artifactoryRegistry=$2; shift 2 ;;
             -r|--remote) repositoryName=$2; shift 2 ;;
             -l|--local) destinationRepositoryName=$2; shift 2 ;;
-	    -y|--yum) yumRepo=$2; shift 2 ;;
+	    -i|--install) pkgRepo=$2; shift 2 ;;
             -t|--tag) specificTag=$2; shift 2 ;;
             -n|--noupdate) noUpdate=true; shift ;;
             -f|--force) forceUpdate=true; shift ;;
@@ -107,9 +108,9 @@ localize-centos(){
 
     mkdir -p work/{tmp,etc/yum.repos.d}
 
-    curl $yumRepo/rpm-local/develop.repo -o work/etc/yum.repos.d/develop.repo
+    curl $pkgRepo/rpm-local/develop.repo -o work/etc/yum.repos.d/develop.repo
     sed -i '/enabled/ d;$ ienabled=0' work/etc/yum.repos.d/develop.repo
-    curl $yumRepo/rpm-local/release.repo -o work/etc/yum.repos.d/release.repo
+    curl $pkgRepo/rpm-local/release.repo -o work/etc/yum.repos.d/release.repo
     sed -i '/enabled/ d;$ ienabled=1' work/etc/yum.repos.d/release.repo
 
     cat >work/tmp/fetchepel.sh <<-EOF1
@@ -122,7 +123,7 @@ set -x
         cat >/etc/yum.repos.d/tmp.repo <<-EOF
 [tmp]
 name=epel temp repo
-baseurl=$yumRepo/fedora/epel/\$releasever/\$basearch
+baseurl=$pkgRepo/fedora/epel/\$releasever/\$basearch
 gpgcheck=0
 EOF
         yum --disablerepo=* --enablerepo=tmp install -y epel-release
@@ -141,9 +142,9 @@ RUN /tmp/fetchepel.sh
 RUN sed -i "\
     /^mirror/ s/^/#/; \
     s/^#base/base/; \
-    /baseurl/ s%\(mirror.centos.org\|download.fedoraproject.org/pub\)%artifactory/artifactory%; \
-    s%file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS%$yumRepo/centos/RPM-GPG-KEY-CentOS%; \
-    s%file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL%$yumRepo/fedora/epel/RPM-GPG-KEY-EPEL%; \
+    /baseurl/ s%http.://\(mirror.centos.org\|download.fedoraproject.org/pub\)%$pkgRepo%; \
+    s%file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS%$pkgRepo/centos/RPM-GPG-KEY-CentOS%; \
+    s%file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL%$pkgRepo/fedora/epel/RPM-GPG-KEY-EPEL%; \
     " /etc/yum.repos.d/*.repo
 COPY etc /etc
 
@@ -162,19 +163,18 @@ localize-fedora(){
 
     mkdir -p work/{etc/yum.repos.d,tmp}
 
-    curl $yumRepo/rpm-local/develop.repo -o work/etc/yum.repos.d/develop.repo
+    curl $pkgRepo/rpm-local/develop.repo -o work/etc/yum.repos.d/develop.repo
     sed -i '/enabled/ d;$ ienabled=0' work/etc/yum.repos.d/develop.repo
-    curl $yumRepo/rpm-local/release.repo -o work/etc/yum.repos.d/release.repo
+    curl $pkgRepo/rpm-local/release.repo -o work/etc/yum.repos.d/release.repo
     sed -i '/enabled/ d;$ ienabled=1' work/etc/yum.repos.d/release.repo
 
     cat >work/Dockerfile <<EOF
 FROM $repo:$tag
 MAINTAINER jayd@jfrog.com
 RUN sed -i "\
-    /^mirror/ s/^/#/; \
+    /^\(mirror\|meta\)/ s/^/#/; \
     s/^#base/base/; \
-    /baseurl/ s%download.fedoraproject.org/pub%artifactory/artifactory/fedora%; \
-    s%file:///etc/pki/rpm-gpg/%$yumRepo/centos/%; \
+    /baseurl/ s%https*://download.fedoraproject.org/pub%$pkgRepo/fedora%; \
     " /etc/yum.repos.d/*.repo
 COPY etc /etc
 
@@ -196,7 +196,7 @@ localize-ubuntu(){
     cat >work/Dockerfile <<EOF
 FROM $repo:$tag
 MAINTAINER jayd@jfrog.com
-RUN sed -i 's%[a-z.]*archive.ubuntu.com%artifactory/artifactory%' \$(find /etc/apt/sources.list* -name *list)
+RUN sed -i 's%https*://[a-z.]*archive.ubuntu.com%$pkgRepo%' \$(find /etc/apt/sources.list* -name *list)
 RUN apt-key adv --recv-key --keyserver keyserver.ubuntu.com 40976EAF437D05B5
 CMD "/bin/bash"
 
@@ -215,7 +215,7 @@ localize-debian(){
     cat >work/Dockerfile <<EOF
 FROM $repo:$tag
 MAINTAINER jayd@jfrog.com
-RUN sed -i 's%http.debian.net%artifactory/artifactory%' \$(find /etc/apt/sources.list* -name *list)
+RUN sed -i 's%https*://\(http.debian.net\|security.debian.org\)%$pkgRepo%' \$(find /etc/apt/sources.list* -name *list)
 CMD "/bin/bash"
 
 EOF

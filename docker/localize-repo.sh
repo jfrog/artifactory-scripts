@@ -54,14 +54,13 @@ parse(){
         case "$1" in
             -a|--artifactory) artifactoryRegistry=$2; shift 2 ;;
             -r|--remote) repositoryName=$2; shift 2 ;;
+            -p|--prefix) localPrefix=$2; shift 2 ;;
             -l|--local) destinationRepositoryName=$2; shift 2 ;;
-	    -i|--install) pkgRepo=$2; shift 2 ;;
+    	    -i|--install) pkgRepo=$2; shift 2 ;;
             -t|--tag) specificTag=$2; shift 2 ;;
             -n|--noupdate) noUpdate=true; shift ;;
             -f|--force) forceUpdate=true; shift ;;
             -h|--help) help ; exit 0 ;;
-            -n|--name) localRepoName=$2; shift 2 ;;
-            -p|--prefix) localPrefix=$2; shift 2 ;;
             --) shift ; break ;;
             *) echo "Internal Error!"; exit 1;;
         esac

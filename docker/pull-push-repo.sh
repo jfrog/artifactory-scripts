@@ -8,7 +8,6 @@ specificTag=
 destinationUserName=
 noUpdate=false
 forceUpdate=false
-localRepoName=
 localPrefix=
 
 [ -x ~/.jfrog/docker.rc ] && . ~/.jfrog/docker.rc
@@ -54,7 +53,6 @@ parse(){
             -n|--noupdate) noUpdate=true; shift ;;
             -f|--force) forceUpdate=true; shift ;;
             -h|--help) help ; exit 0 ;;
-            -n|--name) localRepoName=$2; shift 2 ;;
             -p|--prefix) localPrefix=$2; shift 2 ;;
             --) shift ; break ;;
             *) echo "Internal Error!"; exit 1;;

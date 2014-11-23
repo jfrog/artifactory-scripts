@@ -75,16 +75,16 @@ pullImages() {
     echo "INFO: Pulling needed images from destination repository $artifactoryRegistry"
     if [ -n "$specificTag" ]; then
         docker pull ${artifactoryRegistry}/${destinationRepositoryName}:${specificTag} || \
-           echo "INFO: $destinationRepositoryName:$specificTag does not exists in destination $artifactoryRegistry"
+        echo "INFO: $destinationRepositoryName:$specificTag does not exists in destination $artifactoryRegistry"
     else
         docker pull ${artifactoryRegistry}/${destinationRepositoryName} || \
-           echo "INFO: $destinationRepositoryName does not exists in destination $artifactoryRegistry"
+        echo "INFO: $destinationRepositoryName does not exists in destination $artifactoryRegistry"
     fi
     echo "INFO: Pulling needed images from source repository"
     if [ -n "$specificTag" ]; then
         docker pull ${repositoryName}:${specificTag} || (echo "ERROR: Failed to pull $repositoryName:$specificTag" && return 1)
     else
-        docker pull ${repositoryName} || (echo "ERROR: Failed to pull $repositoryName" && return 2)
+        docker pull --all-tags ${repositoryName} || (echo "ERROR: Failed to pull $repositoryName" && return 2)
     fi
     return 0
 }
@@ -117,7 +117,7 @@ pushOneImage() {
     fi
     echo "INFO: Pushing $imageId ${repositoryName}:${tagName} into ${artifactoryRegistry}/${destinationRepositoryName}:${tagName}"
     docker tag ${forceTag} ${imageId} ${artifactoryRegistry}/${destinationRepositoryName}:${tagName} && \
-     docker push ${artifactoryRegistry}/${destinationRepositoryName}:${tagName}
+    docker push ${artifactoryRegistry}/${destinationRepositoryName}:${tagName}
 }
 
 pullAndUpAllImages() {
@@ -126,7 +126,7 @@ pullAndUpAllImages() {
         pushOneImage "$specificTag"
         return $?
     else
-            echo "INFO: Pushing all tags of $repositoryName"
+        echo "INFO: Pushing all tags of $repositoryName"
         for tag in $(docker images ${repositoryName} | awk -v rn=${repositoryName} '$1 == rn { print $2 }'); do
             echo "INFO: Pushing tag $tag"
             pushOneImage "$tag" || return $?

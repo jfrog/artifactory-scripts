@@ -22,11 +22,12 @@ help(){
     Localize a docker repository to use a local artifactory.
     It will detect the flavor of linux and configure the package manager to use the local repository
 
-    Usage: $(basename $0) <opts> remote tag artifactory
+    Usage: $(basename $0) <opts> remote tag artifactory install
     Where:
-        repository = Docker repository to localize
+        remote     = Docker repository to localize
         tag        = Specific repository tag to localize
         artifactory= Local docker registry
+        install    = URL of local repository
         These can also be specified with option switches
     Opts:
         -a --artifactory    Local docker registry               required
@@ -42,8 +43,8 @@ EOF
 
 parse(){
 
-    local PARM=$(getopt -o a:r:l:t:nfhn0 \
-        --long 'artifactory','remote','local','tag','noupdate','force','help','name','prefix' \
+    local PARM=$(getopt -o a:r:l:t:i:nfhn0 \
+        --long 'artifactory','remote','local','tag','install','noupdate','force','help','name','prefix' \
         -n "$(basename $0)" -- "$@" )
 
     if [ $? != 0 ]; then help; exit 1; fi
@@ -69,9 +70,11 @@ parse(){
      repositoryName=${1:-$repositoryName}
      specificTag=${2:-$specificTag}
      artifactoryRegistry=${3:-$artifactoryRegistry}
+     pkgRepo=${4:-$pkgRepo}
 
      if [ "$artifactoryRegistry" == "" ]; then echo "local artifactory fqdn must not be null"; help; exit 1; fi
      if [ "$repositoryName" == ""      ]; then echo "remote image name must not be null"; help; exit 1; fi
+     if [ "$pkgRepo"        == ""      ]; then echo "package repository base URL must not be null"; help; exit 1; fi
 
      destinationRepositoryName=${destinationRepositoryName:-${localPrefix}${repositoryName}}
 

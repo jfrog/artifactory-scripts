@@ -35,4 +35,4 @@ defaults to blank and prefix defaults to my.  So...
 pull-push-repo ubuntu latest artifactory:80 would pull the image ubuntu:latest and push it to 
 artifactory:80/ubuntu:latest.  If you put artifactoryRegistry=artifactory:80 into your configuration file the
 command would simplify to pull-push-repo ubuntu latest, or pull-push-repo ubuntu if you wanted all ubuntu images
-to be tranferred.
+to be transferred.

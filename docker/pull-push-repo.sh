@@ -1,10 +1,10 @@
 #!/bin/bash
 
-artifactoryRegistry=
-repositoryName=
+registry=
+name=
 
-destinationRepositoryName=
-specificTag=
+destination=
+tag=
 destinationUserName=
 noUpdate=false
 forceUpdate=false
@@ -46,10 +46,10 @@ parse(){
 
     while true; do
         case "$1" in
-            -a|--artifactory) artifactoryRegistry=$2; shift 2 ;;
-            -r|--remote) repositoryName=$2; shift 2 ;;
-            -l|--local) destinationRepositoryName=$2; shift 2 ;;
-            -t|--tag) specificTag=$2; shift 2 ;;
+            -a|--artifactory) registry=$2; shift 2 ;;
+            -r|--remote) name=$2; shift 2 ;;
+            -l|--local) destination=$2; shift 2 ;;
+            -t|--tag) tag=$2; shift 2 ;;
             -n|--noupdate) noUpdate=true; shift ;;
             -f|--force) forceUpdate=true; shift ;;
             -h|--help) help ; exit 0 ;;
@@ -59,32 +59,32 @@ parse(){
         esac
      done
 
-     repositoryName=${1:-$repositoryName}
-     specificTag=${2:-$specificTag}
-     artifactoryRegistry=${3:-$artifactoryRegistry}
+     name=${1:-$name}
+     tag=${2:-$tag}
+     registry=${3:-$registry}
 
-     if [ "$artifactoryRegistry" == "" ]; then echo "local artifactory fqdn must not be null"; help; exit 1; fi
-     if [ "$repositoryName" == ""      ]; then echo "remote image name must not be null"; help; exit 1; fi
+     if [ "$registry" == "" ]; then echo "local artifactory fqdn must not be null"; help; exit 1; fi
+     if [ "$name" == ""     ]; then echo "remote image name must not be null"; help; exit 1; fi
 
-     destinationRepositoryName=${destinationRepositoryName:-${localPrefix}${repositoryName}}
+     destination=${destination:-${localPrefix}${name}}
 
-     echo Duplicating $repositoryName into $artifactoryRegistry/$destinationRepositoryName
+     echo Duplicating $name into $registry/$destination
 }
 
 pullImages() {
-    echo "INFO: Pulling needed images from destination repository $artifactoryRegistry"
-    if [ -n "$specificTag" ]; then
-        docker pull ${artifactoryRegistry}/${destinationRepositoryName}:${specificTag} || \
-        echo "INFO: $destinationRepositoryName:$specificTag does not exists in destination $artifactoryRegistry"
+    echo "INFO: Pulling needed images from destination repository $registry"
+    if [ -n "$tag" ]; then
+        docker pull ${registry}/${destination}:${tag} || \
+        echo "INFO: $destination:$tag does not exists in destination $registry"
     else
-        docker pull ${artifactoryRegistry}/${destinationRepositoryName} || \
-        echo "INFO: $destinationRepositoryName does not exists in destination $artifactoryRegistry"
+        docker pull ${registry}/${destination} || \
+        echo "INFO: $destination does not exists in destination $registry"
     fi
     echo "INFO: Pulling needed images from source repository"
-    if [ -n "$specificTag" ]; then
-        docker pull ${repositoryName}:${specificTag} || (echo "ERROR: Failed to pull $repositoryName:$specificTag" && return 1)
+    if [ -n "$tag" ]; then
+        docker pull ${name}:${tag} || (echo "ERROR: Failed to pull $name:$tag" && return 1)
     else
-        docker pull --all-tags ${repositoryName} || (echo "ERROR: Failed to pull $repositoryName" && return 2)
+        docker pull --all-tags ${name} || (echo "ERROR: Failed to pull $name" && return 2)
     fi
     return 0
 }
@@ -92,21 +92,21 @@ pullImages() {
 pushOneImage() {
     local tagName="$1"
     [ -z "$tagName" ] && (echo "ERROR: did not provide tag name" && return 1)
-    local imageId=$(docker images ${repositoryName} | awk -v rn=${repositoryName} -v tn=${tagName} '($1 == rn) && ($2 == tn) { print $3 }')
+    local imageId=$(docker images ${name} | awk -v rn=${name} -v tn=${tagName} '($1 == rn) && ($2 == tn) { print $3 }')
     if [ -z "$imageId" ]; then
-        echo "ERROR: Could not find image with repository ${repositoryName} and tag $tagName"
+        echo "ERROR: Could not find image with repository ${name} and tag $tagName"
         return 2
     else
-        echo "INFO: Found image $imageId for ${repositoryName}:$tagName"
+        echo "INFO: Found image $imageId for ${name}:$tagName"
     fi
         
     # Check if image already exists in destination
     local forceTag=""
-    local localImageId=$(docker images ${artifactoryRegistry}/${destinationRepositoryName} | awk -v tn=$tagName '$2 == tn { print $3 }')
+    local localImageId=$(docker images ${registry}/${destination} | awk -v tn=$tagName '$2 == tn { print $3 }')
     if [ -z "$localImageId" ]; then
-        echo "INFO: Destination does not contain ${destinationRepositoryName}:${tagName}"
+        echo "INFO: Destination does not contain ${destination}:${tagName}"
     else
-        echo "INFO: Destination contain ${destinationRepositoryName}:${tagName} with id ${localImageId}"
+        echo "INFO: Destination contain ${destination}:${tagName} with id ${localImageId}"
         if ${noUpdate}; then
             echo "INFO: Skipping image update since no-update flag is set"
             return 0
@@ -115,19 +115,19 @@ pushOneImage() {
             forceTag="--force=true"
         fi
     fi
-    echo "INFO: Pushing $imageId ${repositoryName}:${tagName} into ${artifactoryRegistry}/${destinationRepositoryName}:${tagName}"
-    docker tag ${forceTag} ${imageId} ${artifactoryRegistry}/${destinationRepositoryName}:${tagName} && \
-    docker push ${artifactoryRegistry}/${destinationRepositoryName}:${tagName}
+    echo "INFO: Pushing $imageId ${name}:${tagName} into ${registry}/${destination}:${tagName}"
+    docker tag ${forceTag} ${imageId} ${registry}/${destination}:${tagName} && \
+    docker push ${registry}/${destination}:${tagName}
 }
 
 pullAndUpAllImages() {
-    if [ -n "$specificTag" ]; then
-        echo "INFO: Pushing tag $specificTag"
-        pushOneImage "$specificTag"
+    if [ -n "$tag" ]; then
+        echo "INFO: Pushing tag $tag"
+        pushOneImage "$tag"
         return $?
     else
-        echo "INFO: Pushing all tags of $repositoryName"
-        for tag in $(docker images ${repositoryName} | awk -v rn=${repositoryName} '$1 == rn { print $2 }'); do
+        echo "INFO: Pushing all tags of $name"
+        for tag in $(docker images ${name} | awk -v rn=${name} '$1 == rn { print $2 }'); do
             echo "INFO: Pushing tag $tag"
             pushOneImage "$tag" || return $?
         done

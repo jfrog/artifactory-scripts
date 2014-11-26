@@ -1,17 +1,22 @@
 #!/bin/bash
 
-artifactoryRegistry=
-repositoryName=fedora
+registry=
+name=fedora
 
-destinationRepositoryName=
-specificTag=
+destination=
+tag=
 destinationUserName=
 noUpdate=false
 forceUpdate=false
 localRepoName=
-localPrefix=my
+prefix=my
 flavor=
-pkgRepo=
+artifactoryRoot=
+ubuntuUrl=
+centosUrl=
+fedoraUrl=
+debianUrl=
+suseUrl=
 
 
 [ -x ~/.jfrog/docker.rc ] && . ~/.jfrog/docker.rc
@@ -32,7 +37,7 @@ help(){
     Opts:
         -a --artifactory    Local docker registry               required
         -r --remote         Remote image name on docker.io      required
-        -p --prefix         Prefix to add to local repository   defaults to: $localPrefix
+        -p --prefix         Prefix to add to local repository   defaults to: $prefix
         -l --local          Local image name                    defaults to: remote image name with prefix
         -t --tag            Specific tag to localize            defaults to: all tags for that image
         -i --install        URL of local package repository     no default
@@ -42,8 +47,7 @@ EOF
 }
 
 parse(){
-
-    local PARM=$(getopt -o a:r:l:t:i:nfhn0 \
+    local PARM=$(getopt -o a:r:l:t:i:nfhnp: \
         --long 'artifactory','remote','local','tag','install','noupdate','force','help','name','prefix' \
         -n "$(basename $0)" -- "$@" )
 
@@ -53,12 +57,12 @@ parse(){
 
     while true; do
         case "$1" in
-            -a|--artifactory) artifactoryRegistry=$2; shift 2 ;;
-            -r|--remote) repositoryName=$2; shift 2 ;;
-            -p|--prefix) localPrefix=$2; shift 2 ;;
-            -l|--local) destinationRepositoryName=$2; shift 2 ;;
-    	    -i|--install) pkgRepo=$2; shift 2 ;;
-            -t|--tag) specificTag=$2; shift 2 ;;
+            -a|--artifactory) registry=$2; shift 2 ;;
+            -r|--remote) name=$2; shift 2 ;;
+            -p|--prefix) prefix=$2; shift 2 ;;
+            -l|--local) destination=$2; shift 2 ;;
+    	    -i|--install) artifactoryRoot=$2; shift 2 ;;
+            -t|--tag) tag=$2; shift 2 ;;
             -n|--noupdate) noUpdate=true; shift ;;
             -f|--force) forceUpdate=true; shift ;;
             -h|--help) help ; exit 0 ;;
@@ -67,18 +71,23 @@ parse(){
         esac
      done
 
-     repositoryName=${1:-$repositoryName}
-     specificTag=${2:-$specificTag}
-     artifactoryRegistry=${3:-$artifactoryRegistry}
-     pkgRepo=${4:-$pkgRepo}
+     name=${1:-$name}
+     tag=${2:-$tag}
+     registry=${3:-$registry}
+     artifactoryRoot=${4:-$artifactoryRoot}
+     ubuntuUrl=${ubuntuUrl:-${artifactoryRoot}/ubuntu}
+     centosUrl=${centosUrl:-${artifactoryRoot}/centos}
+     fedoraUrl=${fedoraUrl:-${artifactoryRoot}/fedora}
+     debianUrl=${debianUrl:-${artifactoryRoot}/debian}
+     suseUrl=${suseUrl:-${artifactoryRoot}/suse}
 
-     if [ "$artifactoryRegistry" == "" ]; then echo "local artifactory fqdn must not be null"; help; exit 1; fi
-     if [ "$repositoryName" == ""      ]; then echo "remote image name must not be null"; help; exit 1; fi
-     if [ "$pkgRepo"        == ""      ]; then echo "package repository base URL must not be null"; help; exit 1; fi
+     if [ "$registry"        == "" ]; then echo "local artifactory fqdn must not be null"; help; exit 1; fi
+     if [ "$name"            == "" ]; then echo "remote image name must not be null"; help; exit 1; fi
+     if [ "$artifactoryRoot" == "" ]; then echo "package repository base URL must not be null"; help; exit 1; fi
 
-     destinationRepositoryName=${destinationRepositoryName:-${localPrefix}${repositoryName}}
+     destination=${destination:-${prefix}${name}}
 
-     echo Localizing $artifactoryRegistry/$repositoryName${specificTag:+:}${specificTag} into $artifactoryRegistry/$destinationRepositoryName${specificTag:+:}${specificTag}
+     echo Localizing $registry/$name${tag:+:}${tag} into $registry/$destination${tag:+:}${tag}
 }
 
 whichFlavor(){
@@ -98,8 +107,8 @@ whichFlavor(){
 }
 
 build_and_tag(){
-    docker build --tag=$artifactoryRegistry/$destinationRepositoryName${tag:+:}${tag} work
-    docker push $artifactoryRegistry/$destinationRepositoryName${tag:+:}${tag}
+    docker build --tag=$registry/$destination${tag:+:}${tag} work
+    docker push $registry/$destination${tag:+:}${tag}
     rm -rf work
 }
 
@@ -110,9 +119,9 @@ localize-centos(){
 
     mkdir -p work/{tmp,etc/yum.repos.d}
 
-    curl $pkgRepo/rpm-local/develop.repo -o work/etc/yum.repos.d/develop.repo
+    curl $artifactoryRoot/rpm-local/develop.repo -o work/etc/yum.repos.d/develop.repo
     sed -i '/enabled/ d;$ ienabled=0' work/etc/yum.repos.d/develop.repo
-    curl $pkgRepo/rpm-local/release.repo -o work/etc/yum.repos.d/release.repo
+    curl $artifactoryRoot/rpm-local/release.repo -o work/etc/yum.repos.d/release.repo
     sed -i '/enabled/ d;$ ienabled=1' work/etc/yum.repos.d/release.repo
 
     cat >work/tmp/fetchepel.sh <<-EOF1
@@ -125,7 +134,7 @@ set -x
         cat >/etc/yum.repos.d/tmp.repo <<-EOF
 [tmp]
 name=epel temp repo
-baseurl=$pkgRepo/fedora/epel/\$releasever/\$basearch
+baseurl=$fedoraUrl/epel/\$releasever/\$basearch
 gpgcheck=0
 EOF
         yum --disablerepo=* --enablerepo=tmp install -y epel-release
@@ -136,7 +145,7 @@ EOF1
     chmod +x work/tmp/fetchepel.sh
 
     cat >work/Dockerfile <<EOF
-FROM $artifactoryRegistry/$repositoryName:$tag
+FROM $registry/$name:$tag
 MAINTAINER jayd@jfrog.com
 
 COPY tmp /tmp
@@ -144,9 +153,10 @@ RUN /tmp/fetchepel.sh
 RUN sed -i "\
     /^mirror/ s/^/#/; \
     s/^#base/base/; \
-    /baseurl/ s%http.://\(mirror.centos.org\|download.fedoraproject.org/pub\)%$pkgRepo%; \
-    s%file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS%$pkgRepo/centos/RPM-GPG-KEY-CentOS%; \
-    s%file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL%$pkgRepo/fedora/epel/RPM-GPG-KEY-EPEL%; \
+    /baseurl/ s%http.://mirror.centos.org/centos%$centosUrl%; \
+    /baseurl/ s%http.://download.fedoraproject.org/pub/fedora%$fedoraUrl%; \
+    s%file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS%$centosUrl/RPM-GPG-KEY-CentOS%; \
+    s%file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL%$fedoraUrl/epel/RPM-GPG-KEY-EPEL%; \
     " /etc/yum.repos.d/*.repo
 COPY etc /etc
 
@@ -165,9 +175,9 @@ localize-fedora(){
 
     mkdir -p work/{etc/yum.repos.d,tmp}
 
-    curl $pkgRepo/rpm-local/develop.repo -o work/etc/yum.repos.d/develop.repo
+    curl $artifactoryRoot/rpm-local/develop.repo -o work/etc/yum.repos.d/develop.repo
     sed -i '/enabled/ d;$ ienabled=0' work/etc/yum.repos.d/develop.repo
-    curl $pkgRepo/rpm-local/release.repo -o work/etc/yum.repos.d/release.repo
+    curl $artifactoryRoot/rpm-local/release.repo -o work/etc/yum.repos.d/release.repo
     sed -i '/enabled/ d;$ ienabled=1' work/etc/yum.repos.d/release.repo
 
     cat >work/Dockerfile <<EOF
@@ -176,7 +186,7 @@ MAINTAINER jayd@jfrog.com
 RUN sed -i "\
     /^\(mirror\|meta\)/ s/^/#/; \
     s/^#base/base/; \
-    /baseurl/ s%https*://download.fedoraproject.org/pub%$pkgRepo/fedora%; \
+    /baseurl/ s%https*://download.fedoraproject.org/pub%$fedoraUrl%; \
     " /etc/yum.repos.d/*.repo
 COPY etc /etc
 
@@ -198,7 +208,7 @@ localize-ubuntu(){
     cat >work/Dockerfile <<EOF
 FROM $repo:$tag
 MAINTAINER jayd@jfrog.com
-RUN sed -i 's%https*://[a-z.]*archive.ubuntu.com%$pkgRepo%' \$(find /etc/apt/sources.list* -name *list)
+RUN sed -i 's%https*://[a-z.]*archive.ubuntu.com%$ubuntuUrl%' \$(find /etc/apt/sources.list* -name *list)
 RUN apt-key adv --recv-key --keyserver keyserver.ubuntu.com 40976EAF437D05B5
 CMD "/bin/bash"
 
@@ -217,7 +227,7 @@ localize-debian(){
     cat >work/Dockerfile <<EOF
 FROM $repo:$tag
 MAINTAINER jayd@jfrog.com
-RUN sed -i 's%https*://\(http.debian.net\|security.debian.org\)%$pkgRepo%' \$(find /etc/apt/sources.list* -name *list)
+RUN sed -i 's%https*://\(http.debian.net/debian\|security.debian.org\)%$debianUrl%' \$(find /etc/apt/sources.list* -name *list)
 CMD "/bin/bash"
 
 EOF
@@ -227,11 +237,11 @@ EOF
 
 process(){
 
-    docker pull ${artifactoryRegistry}/${repositoryName}${specificTag:+:}${specificTag} >/dev/null
-    docker images $artifactoryRegistry/$repositoryName |\
-        awk "(NR > 1 && \"$specificTag\" == \"\") || (\"$specificTag\" != \"\" && /$specificTag/) {print \$1 \" \" \$2 \" \" \$3}" | while read repo tag hash; do
+    docker pull ${registry}/${name}${tag:+:}${tag} >/dev/null
+    docker images $registry/$name |\
+        awk "(NR > 1 && \"$tag\" == \"\") || (\"$tag\" != \"\" && /$tag/) {print \$1 \" \" \$2 \" \" \$3}" | while read repo tag hash; do
         echo $repo $tag $hash
-        [[ $repo == *$artifactoryRegistry* ]] || continue;
+        [[ $repo == *$registry* ]] || continue;
         whichFlavor $hash
         if [ $flavor ]; then
             localize-$flavor $repo $tag $hash
@@ -242,4 +252,3 @@ process(){
 
 parse "$@"
 process
-

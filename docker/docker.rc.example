@@ -1,0 +1,41 @@
+# Example configuration file for the docker.rc file
+
+# Docker container name conforms to the following format:
+# (<registry>/)(<namespace>/)repository(:<tag>)
+
+# registry can be null if it exists it must contain either : or .
+# for example:
+# registry=artifactory:80
+registry=
+
+# for our purposes namespace and repository are combined into a name.  Namespace is optional, but can only contain [a-z0-9]
+# examples:
+# name=centos, name=ubuntu, name=jfrog/artifactory 
+name=
+
+# tag is the tag given to this particular image.  Its usually the version or release of the container
+# examples tag=centos6, tag=trusty, tag=14.04
+tag=
+
+# Processed docker containers can have a new name
+
+# A prefix is added onto the name for example name=centos prefix=me gives mycentos as the new name
+prefix=my
+
+# The other method to specify the target name is specifying the destination name
+destination=
+
+# if both prefix and destination are empty the original container is replaced with the edited one.
+
+# The main point of this script is to modify the repository configurations of docker containers.  The root URL
+# of that repository is here:
+# for example artifactoryRoot=http://artifactory/artifactory
+artifactoryRoot=
+
+# each repository type needs a location
+
+#ubuntuUrl=${artifactoryRoot}/ubuntu
+#centosUrl=${artifactoryRoot}/centos
+#fedoraUrl=${artifactoryRoot}/fedora
+#debianUrl=${artifactoryRoot}/debian
+#suseUrl=${artifactoryRoot}/suse

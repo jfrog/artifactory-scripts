@@ -11,12 +11,12 @@ artifactory to provide the packages.
 
 ## Configuration
 Since both scripts need the same sorts of information they share a common configuration file.  That file is hard-wired
-to live in $HOME/.jfrog/docker.rc.  Currently there is a one to one correspondence between the configuration entry 
-and each command line switch.
+to live in $HOME/.jfrog/docker.rc.  All of the tunables reside there.  The example configuration file in this directory
+is pretty well documented.
 
-Any docker image has a name that conforms to this pattern ([registry:port]/)([namespace]/)[image]:[tag] 
-e.g. artifactory:80/ubuntu:latest.  Namespace and registry are optional.  Both the all components must be 4 to 30
-characters long consisting of only [a-z0-9-_.].  The registry must contain a : to distinguish it from the namespace.  
+Any docker image has a name that conforms to this pattern ([registry:port]/)([namespace]/)[repository]:[tag] 
+e.g. artifactory:80/ubuntu:latest.  Namespace and registry are optional.  Both of these components must be 4 to 30
+characters long consisting of only [a-z0-9-_].  The registry must contain a : or . to distinguish it from the namespace.  
 
 -a | --artifactory | artifactoryRegistry       | Target registry
 -r | --remote      | repositoryName            | Image name on source registry
@@ -36,3 +36,11 @@ pull-push-repo ubuntu latest artifactory:80 would pull the image ubuntu:latest a
 artifactory:80/ubuntu:latest.  If you put artifactoryRegistry=artifactory:80 into your configuration file the
 command would simplify to pull-push-repo ubuntu latest, or pull-push-repo ubuntu if you wanted all ubuntu images
 to be transferred.
+
+## Optional scripts
+Scripts which execute after the Dockerfile is created, but before the build happens live in ~/.jfrog/docker.rc.d they 
+must conform to $flavor*.sh where flavor is the repository flavor, ubuntu, debian, centos, fedora, suse.  A couple of 
+example scripts are included here.
+
+If you're running some of jfrog's other scripts which build various artifactory based docker containers you'll need
+something like the local repository script to install artifactory since they require a yum repo.

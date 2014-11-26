@@ -107,8 +107,13 @@ whichFlavor(){
 }
 
 build_and_tag(){
+set -x
+    for s in ~/.jfrog/docker.rc.d/$flavor*.sh; do
+        [ -x $s ] && . $s
+    done
     docker build --tag=$registry/$destination${tag:+:}${tag} work
-    docker push $registry/$destination${tag:+:}${tag}
+    #docker push $registry/$destination${tag:+:}${tag}
+exit
     rm -rf work
 }
 
@@ -117,49 +122,17 @@ localize-centos(){
     local tag=$2
     local hash=$3
 
-    mkdir -p work/{tmp,etc/yum.repos.d}
-
-    curl $artifactoryRoot/rpm-local/develop.repo -o work/etc/yum.repos.d/develop.repo
-    sed -i '/enabled/ d;$ ienabled=0' work/etc/yum.repos.d/develop.repo
-    curl $artifactoryRoot/rpm-local/release.repo -o work/etc/yum.repos.d/release.repo
-    sed -i '/enabled/ d;$ ienabled=1' work/etc/yum.repos.d/release.repo
-
-    cat >work/tmp/fetchepel.sh <<-EOF1
-        #!/bin/bash
-set -x
-        distro=\$(sed -n 's/^distroverpkg=//p' /etc/yum.conf)
-        releasever=\$(rpm -q --qf "%{version}" -f /etc/\$distro)
-        basearch=\$(rpm -q --qf "%{arch}" -f /etc/\$distro)
-
-        cat >/etc/yum.repos.d/tmp.repo <<-EOF
-[tmp]
-name=epel temp repo
-baseurl=$fedoraUrl/epel/\$releasever/\$basearch
-gpgcheck=0
-EOF
-        yum --disablerepo=* --enablerepo=tmp install -y epel-release
-        yum --disablerepo=* --enablerepo=tmp clean all
-
-        rm /etc/yum.repos.d/tmp.repo
-EOF1
-    chmod +x work/tmp/fetchepel.sh
-
+    mkdir work
     cat >work/Dockerfile <<EOF
 FROM $registry/$name:$tag
 MAINTAINER jayd@jfrog.com
 
-COPY tmp /tmp
-RUN /tmp/fetchepel.sh
 RUN sed -i "\
     /^mirror/ s/^/#/; \
     s/^#base/base/; \
     /baseurl/ s%http.://mirror.centos.org/centos%$centosUrl%; \
-    /baseurl/ s%http.://download.fedoraproject.org/pub/fedora%$fedoraUrl%; \
     s%file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS%$centosUrl/RPM-GPG-KEY-CentOS%; \
-    s%file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL%$fedoraUrl/epel/RPM-GPG-KEY-EPEL%; \
     " /etc/yum.repos.d/*.repo
-COPY etc /etc
-
 CMD "/bin/bash"
 
 EOF

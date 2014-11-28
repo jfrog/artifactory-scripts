@@ -22,7 +22,7 @@ import org.jfrog.artifactory.client.ArtifactoryClient;
 import org.jfrog.artifactory.client.RepositoryHandle;
 import com.xlson.groovycsv.CsvParser;
 
-
+/* Blah!  Comment out the Grapes sections if you want to build a stand alone jar file.  Double Blah!! */
 @Grapes([
         @GrabResolver(name='artifactory01.nexus.commercehub.com', root='http://artifactory01.nexus.commercehub.com/artifactory/ext-release-local/', m2Compatible=true),
         @Grab(group='net.sf.json-lib', module='json-lib', version='2.4', classifier='jdk15' ),
@@ -41,7 +41,7 @@ import com.xlson.groovycsv.CsvParser;
         @Grab(group='org.jfrog.artifactory.client', module='artifactory-java-client-services', version='0.13'),
         @GrabExclude(group='org.codehaus.groovy', module='groovy-xml')
 ])
-
+/* End of commented out code. */
 
 /**
  * This groovy class is meant to mark artifacts for release and clean up old versions.
@@ -60,6 +60,8 @@ import com.xlson.groovycsv.CsvParser;
  *
  * There are two additional options.  The first is the dryRun option. This way you can get
  * an overview of what will be processed. If specified, no artifacts will be altered.
+ * The second is full-log option which will display processing information which
+ * can be useful if your script is not working quite right.
  *
  * Usage example
  *   groovy ArtifactoryProcess.groovy --dry-run --function mark --value production --must-have releasable --web-server http://yourWebServer/artifactory/ --domain <com.YourOrg> --repository libs-release-prod 1.0.1 1.0.2
@@ -74,7 +76,7 @@ class ArtifactoryProcess {
     @Option(name='--dry-run', usage='Don\'t change anything; just list what would be done')
     boolean dryRun;
 
-    @Option(name='--full-log', usage='Log miscellaneous steps for processing artifacts')
+    @Option(name='--full-log', usage='Display miscellaneous steps for processing artifacts')
     boolean fullLog;
 
 //  eg  --function mark
@@ -525,9 +527,9 @@ class ArtifactoryProcess {
                     keep--;
                 }
                 while( set.pathAndDate.size() > 0 ) {
-                    if( set.pathAndDate[ 0 ].dtCreated == null ) {
-                        println "Whatsup with the null?"
-                    }
+//                    if( set.pathAndDate[ 0 ].dtCreated == null ) {
+//                        println "Whatsup with the null?"
+                    def look = new Date() - set.pathAndDate[ 0 ].dtCreated;
                     if( state.minDays <= 0 ||            // Check if qualifies for minDays
                         state.minDays  < new Date() - set.pathAndDate[ 0 ].dtCreated ) { // Actual check for qualifying minDays
                         numProcessed += processItem(set.pathAndDate[0].path);

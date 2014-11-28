@@ -1,9 +1,16 @@
-Invoke with:
+There are now two groovy scripts in this project.  They can each be built and
+run separately.  The chief reason they are in the same project is to share the
+build / debug infrastructure.  ArtifactoryProcess is useful to maintain proudction
+application artifacts in Artifactory, finally cleaning out older artifacts.
+ArtifactoryUpload was broken out as its focus is on a single source directory
+and uploads a set of artifacts into Artifactory following maven naming conventions. 
+
+Invoke ArtifactoryProcess with:
 
 groovy ArtifactoryProcess.groovy [--dry-run] [--full-log] --function <func> --value <val> --web-server http://YourWebServer --repository yourRepoName --domain <com/YourOrg> Version1 ...
  --domain domain         : Name of the domain to scan.
  --dry-run               : Don't change anything; just list what would be done
- --full-log              : Log miscellaneous steps for processing artifacts
+ --full-log              : Display miscellaneous steps for processing artifacts
  --function function     : function to perform on artifacts
  --maxDays maxDays       : max days to mark / delete artifact (ignores counts),
                            optional
@@ -70,3 +77,41 @@ groovy on your server, you can comment out the @Grapes sections at the top (oh
 for the conditional compilations of c days gone) and build the required jar file
 with 'gradlew build'.  You can then run the utility with something like:
 java -jar build/libs/artifactoryProcess-run.jar --dry-run --full-log --function mark --value tested --web-server http://YourWebServer/ --repository yourRepoName  --domain <com.YourOrg> --userName fill-in-userID --password fill-in-password 1.0.45-zdf
+
+Invoke ArtifactoryUpload with:
+
+cd d:\git\ArtifactoryProcess
+groovy src/main/groovy/artifactoryProcess/ArtifactoryUpload.groovy 
+ --function upload --sourceDir //ciJenkins/d$/ci/jobs/targetJob/builds/2014-11-17_12-17-07/archive/archived
+ --value 1.0.6 --jarsToUpload OSupload.csv --domain com/yourDomain 
+ --web-server http://artifactory/ --repository libs-release-test
+ --userName someUser --password somePassword
+
+groovy ArtifactoryProcess.groovy [--dry-run] [--full-log] --function <func> 
+ --value <val> --web-server http://YourWebServer/
+ --repository libs-release-local --domain <com/YourOrg> Version1 ...
+ --domain domain             : Name of the domain to scan.
+ --dry-run                   : Don't change anything; just list what would be
+                               done
+ --full-log                  : Display miscellaneous steps for processing artifacts
+ --function function         : function to perform on artifacts
+ --jarsToUpload jarsToUpload : name of csv file with jar files to upload
+ --password password         : Password to use to access Artifactory server.
+ --repository repoName       : Name of the repository to scan.
+ --sourceDir sourceDir       : source directory for uploaded artifacts, optional
+ --userName userName         : userName to use to access Artifactory server
+ --value value               : value to use with certain functions, often
+                               required
+ --web-server webServer      : URL to use to access Artifactory server
+
+  Example: groovy ArtifactoryProcess.groovy --domain domain --dry-run --full-log
+  --function function --jarsToUpload jarsToUpload.csv --password password
+  --repository repoName --sourceDir sourceDir --userName userName
+  --value value --web-server webServer
+
+  Supported functions include [config, upload]
+
+  Columns in config csv files can be [dry-run, sourceDir, repoName, domain,
+  value, userName, full-log, webServer, jarsToUpload, password, function]
+
+

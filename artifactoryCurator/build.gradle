@@ -86,8 +86,25 @@ task capsule(type: Jar, dependsOn: jar) {
     }
 }
 
+task capsuleUpload(type: Jar, dependsOn: jar) {
+    archiveName = 'artifactoryUpload-run.jar'
+    from jar
+    from { configurations.runtime }
+    from { configurations.capsule.collect { zipTree(it) } }
+    manifest {
+        attributes(
+            'Main-Class'         : 'Capsule',
+            'Application-Class'  : 'artifactoryUpload.ArtifactoryUpload',
+            'Application-Name'   : project.name,
+            'Application-Version': project.version,
+            'System-Properties'  : 'org.jboss.logging.provider=slf4j'
+        )
+    }
+}
+
 artifacts {
     archives capsule
+    archives capsuleUpload
 }
 
 task libs(type: Sync) {

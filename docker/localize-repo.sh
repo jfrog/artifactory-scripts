@@ -112,8 +112,7 @@ set -x
         [ -x $s ] && . $s
     done
     docker build --tag=$registry/$destination${tag:+:}${tag} work
-    #docker push $registry/$destination${tag:+:}${tag}
-exit
+    docker push $registry/$destination${tag:+:}${tag}
     rm -rf work
 }
 

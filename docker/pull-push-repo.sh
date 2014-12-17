@@ -92,7 +92,7 @@ pullImages() {
 pushOneImage() {
     local tagName="$1"
     [ -z "$tagName" ] && (echo "ERROR: did not provide tag name" && return 1)
-    local imageId=$(docker images ${name} | awk -v rn=${name} -v tn=${tagName} '($1 == rn) && ($2 == tn) { print $3 }')
+    local imageId=$(docker images ${name} | awk -v rn=${name} -v tn=${tagName} '($1 == rn) && ($2 == tn) { print $3;exit }')
     if [ -z "$imageId" ]; then
         echo "ERROR: Could not find image with repository ${name} and tag $tagName"
         return 2

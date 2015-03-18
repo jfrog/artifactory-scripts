@@ -18,14 +18,16 @@ Any docker image has a name that conforms to this pattern ([registry:port]/)([na
 e.g. artifactory:80/ubuntu:latest.  Namespace and registry are optional.  Both of these components must be 4 to 30
 characters long consisting of only [a-z0-9-_].  The registry must contain a : or . to distinguish it from the namespace.  
 
--a | --artifactory | artifactoryRegistry       | Target registry
--r | --remote      | repositoryName            | Image name on source registry
--l | --local       | destinationRepositoryName | Image name on target registry
--p | --prefix      | localPrefix               | Optional prefix to add to source image name to make destination 
--t | --tag         | specificTag               | Specific tag to act on
--f | --force       | forceUpdate               | Force the operation
--n | --noupdate    | noUpdate                  | Do not perform the operation
--h | --help        | help                      | Help
+flag | long          | parameter                 | description
+---- | ------------- | ------------------------- | ------------------------------------------------------------------
+-a   | --artifactory | artifactoryRegistry       | Target registry
+-r   | --remote      | repositoryName            | Image name on source registry
+-l   | --local       | destinationRepositoryName | Image name on target registry
+-p   | --prefix      | localPrefix               | Optional prefix to add to source image name to make destination 
+-t   | --tag         | specificTag               | Specific tag to act on
+-f   | --force       | forceUpdate               | Force the operation
+-n   | --noupdate    | noUpdate                  | Do not perform the operation
+-h   | --help        | help                      | Help
 
 ## Usage
 

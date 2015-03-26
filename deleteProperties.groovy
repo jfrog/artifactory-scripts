@@ -18,7 +18,6 @@
 *Note that this will delete by default all of the desrid properties recursivll.
 */
 
-@GrabResolver(name = 'jcenter', root = 'http://jcenter.bintray.com/')
 @Grab(group = 'org.codehaus.groovy.modules.http-builder', module = 'http-builder', version = '0.6')
 import groovyx.net.http.RESTClient
 

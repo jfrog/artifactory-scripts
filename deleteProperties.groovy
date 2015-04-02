@@ -14,9 +14,9 @@
  * limitations under the License.
  *
  *
-* This plugin deletes all properties from a repository according to a list provide in a file.
-* Please note - By default all configured properties are deleted recursively.
-*/
+ * This plugin deletes all properties from a repository according to a list provide in a file.
+ * Please note - By default all configured properties are deleted recursively.
+ */
 
 @Grab(group = 'org.codehaus.groovy.modules.http-builder', module = 'http-builder', version = '0.6')
 import groovyx.net.http.RESTClient

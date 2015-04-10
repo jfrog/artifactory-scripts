@@ -107,11 +107,10 @@ whichFlavor(){
 }
 
 build_and_tag(){
-set -x
     for s in ~/.jfrog/docker.rc.d/$flavor*.sh; do
         [ -x $s ] && . $s
     done
-    docker build --tag=$registry/$destination${tag:+:}${tag} work
+    docker build --rm --tag=$registry/$destination${tag:+:}${tag} work
     docker push $registry/$destination${tag:+:}${tag}
     rm -rf work
 }
@@ -180,7 +179,7 @@ localize-ubuntu(){
     cat >work/Dockerfile <<EOF
 FROM $repo:$tag
 MAINTAINER jayd@jfrog.com
-RUN sed -i 's%https*://[a-z.]*archive.ubuntu.com%$ubuntuUrl%' \$(find /etc/apt/sources.list* -name *list)
+RUN sed -i 's%https*://[a-z.]*archive.ubuntu.com%$ubuntuUrl%;s/^deb-src/#deb-src/' \$(find /etc/apt/sources.list* -name *list)
 RUN apt-key adv --recv-key --keyserver keyserver.ubuntu.com 40976EAF437D05B5
 CMD "/bin/bash"
 

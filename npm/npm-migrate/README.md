@@ -1,4 +1,4 @@
-#H1 To use NPM Migrate:
+#To use NPM Migrate:
 1. In the Artifactory instance to which you want to migrate the npm registry packages, please create npm remote repository pointing to the source registry.  
 2. Clone the artifactory-scripts/npm/npm-migrate folder  
 3. Inside the conf directory, edit the config.json file as follows:  

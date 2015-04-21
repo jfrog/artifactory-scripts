@@ -1,0 +1,4 @@
+{
+    "sourceRegUrl" : "http://localhost:5984/registry/_all_docs?include_docs=true",
+    "targetRegUrl" : "http://localhost:8081/artifactory/api/npm/couch-npm-remote"
+}

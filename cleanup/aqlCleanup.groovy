@@ -11,7 +11,7 @@ def query = 'items.find({"type":"file","name":{"$match":"*.jar"}})' // replace t
 def artifactoryURL = 'http://localhost:8081/artifactory/' // replace this with your Artifactory server
 def restClient = new RESTClient(artifactoryURL)
 restClient.setHeaders(['Authorization': 'Basic ' + "admin:password".getBytes('iso-8859-1').encodeBase64()]) //replace the 'admin:password' with your own credentials
-def dryRun = false //set the value to false if you want the script to actually delete the artifacts
+def dryRun = true //set the value to false if you want the script to actually delete the artifacts
 
 def itemsToDelete = getAqlQueryResult(restClient, query)
 if (itemsToDelete != null && itemsToDelete.size() > 0) {

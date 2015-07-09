@@ -47,8 +47,8 @@ EOF
 }
 
 parse(){
-    local PARM=$(getopt -o a:r:l:t:i:nfhnp: \
-        --long 'artifactory','remote','local','tag','install','noupdate','force','help','name','prefix' \
+    local PARM=$(getopt -o a:r:l:t:i:nfhnp:c \
+        --long 'artifactory','remote','local','tag','install','noupdate','force','help','name','prefix','nocache' \
         -n "$(basename $0)" -- "$@" )
 
     if [ $? != 0 ]; then help; exit 1; fi
@@ -65,6 +65,7 @@ parse(){
             -t|--tag) tag=$2; shift 2 ;;
             -n|--noupdate) noUpdate=true; shift ;;
             -f|--force) forceUpdate=true; shift ;;
+	    -c|--nocache) noCache="--no-cache=true"; shift ;;
             -h|--help) help ; exit 0 ;;
             --) shift ; break ;;
             *) echo "Internal Error!"; exit 1;;
@@ -110,7 +111,7 @@ build_and_tag(){
     for s in ~/.jfrog/docker.rc.d/$flavor*.sh; do
         [ -x $s ] && . $s
     done
-    docker build --rm --tag=$registry/$destination${tag:+:}${tag} work
+    docker build $noCache --force-rm=true --rm=true --tag=$registry/$destination${tag:+:}${tag} work
     docker push $registry/$destination${tag:+:}${tag}
     rm -rf work
 }
@@ -181,6 +182,12 @@ FROM $repo:$tag
 MAINTAINER jayd@jfrog.com
 RUN sed -i 's%https*://[a-z.]*archive.ubuntu.com%$ubuntuUrl%;s/^deb-src/#deb-src/' \$(find /etc/apt/sources.list* -name *list)
 RUN apt-key adv --recv-key --keyserver keyserver.ubuntu.com 40976EAF437D05B5
+RUN apt-get update
+RUN apt-get install software-properties-common -y
+RUN add-apt-repository ppa:openjdk-r/ppa
+RUN sed -i 's%http://ppa.launchpad.net%${artifactoryRoot}/ppa%' /etc/apt/sources.list.d/*ppa*
+RUN apt-get autoremove --purge software-properties-common -y
+RUN apt-get clean all
 CMD "/bin/bash"
 
 EOF

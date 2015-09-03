@@ -8,219 +8,147 @@ import argparse
 import xml.etree.ElementTree as ET
 
 class PackageCheck():
-    repoTypeList = ["NuGet", "Gems", "Npm", "Bower", "Debian",
-                    "Pypi", "Docker", "Vagrant", "GitLfs"]
-
     def __init__(self, args):
-        # initialize a json representation, in case we need json output
-        self.json = {}
-        # set the output file, if specified
-        self.of = sys.stdout
-        if args.output_file != None:
-            self.of = open(args.output_file, "w")
-        # whether to print most logs (when the output is verbose plaintext)
-        vp = args.verbose and not args.json
         # initialize the exit status
         self.status = 0
-        # if any auth argument was provided, process it
-        self.initAuth(args.user)
-        # print initial log message, if we're doing plaintext output
-        if not args.json: self.of.write("Getting repository list\n")
-        # get a list of repos, and iterate over them
-        for data in self.getRepoList(args):
-            if vp: self.of.write("Checking repo '" + data["key"] + "' ... ")
-            # get the data for this repository
-            try: repodata = self.getRepoData(data["key"], args)
-            except:
-                if vp: self.of.write("error\n")
-                raise
-            # get a list of package types the repo is configured with
-            typeList = self.collectTypes(repodata)
-            # if there are multiple, fail the current status and log errors
-            if len(typeList) > 1:
-                self.status = 1
-                msg = "\tRepo has conflicting types: " + typeList.pop(0)
-                for typ in typeList:
-                    msg += ", " + typ
-                if vp: self.of.write("failed\n" + msg + "\n")
-                elif not args.json:
-                    self.of.write("Checking repo '" + data["key"]
-                                  + "' ... failed\n" + msg + "\n")
-            elif vp: self.of.write("passed\n")
-        # if we're outputting json, filter it appropriately and print
-        if args.json:
-            newjson = self.json
-            if not args.verbose:
-                newjson = {}
-                for repo in self.json:
-                    if not self.json[repo]["status"]:
-                        newjson[repo] = self.json[repo]
-            self.of.write(json.dumps(newjson))
-        # close the output stream
-        self.of.close()
+        # set the output file, if specified
+        outf = None
+        try:
+            if args.output_file != None: outf = open(args.output_file, "w")
+            else: outf = sys.stdout
+        except (OSError, IOError) as ex:
+            err = "Error: Could not open file: " + str(ex) + "\n"
+            sys.stderr.write(err)
+            sys.exit(1)
+        # manage the output file
+        with outf:
+            # initialize a json representation, in case we need json output
+            jsonobj = {}
+            # if any auth argument was provided, process it
+            auth = self.initAuth(args.user)
+            # print initial log message, if we're doing plaintext output
+            if not args.json: outf.write("Getting repository list\n")
+            # get a list of repos, and iterate over them
+            for key, types in self.getRepoList(args, auth):
+                typelen, stat, msg = len(types), "passed", None
+                # add the type list to the json object
+                if args.json and (args.verbose or typelen > 1):
+                    jsonobj[key] = {"status": typelen <= 1, "types": types}
+                # if there are multiple package types, fail the current status
+                if typelen > 1:
+                    self.status = 1
+                    stat = "failed"
+                    msg = "\tRepo has conflicting types: " + ", ".join(types)
+                # print the status message if necessary
+                if not args.json and (args.verbose or typelen > 1):
+                    outf.write("Checking repo '" + key + "' ... " + stat + "\n")
+                    if msg != None: outf.write(msg + "\n")
+            # if we're outputting json, print some json
+            if args.json: outf.write(json.dumps(jsonobj))
 
-    # given a repository data dict, extract and return a list of package types
-    def collectTypes(self, repodata):
+    # given a repository xml node, extract and return a list of package types
+    def collectTypes(self, ns, rclass, data):
+        # a list of all the simple package types
+        repoTypeList = ["NuGet", "Gems", "Npm", "Bower", "Debian",
+                        "Pypi", "Docker", "Vagrant", "GitLfs"]
         # initialize an empty list to hold package types
         typeList = []
         # check for all the simple package support flags
-        for typ in self.repoTypeList:
-            t = "enable" + typ + "Support"
-            if t in repodata and repodata[t] == True:
-                typeList.append(typ)
+        for typ in repoTypeList:
+            t = data.find(ns + "enable" + typ + "Support")
+            if t != None and t.text == "true": typeList.append(typ)
         # check for yum support
-        yum = ["calculateYumMetadata", "yumRootDepth", "yumGroupFileNames"]
-        if yum[0] in repodata and repodata[yum[0]] == True:
-            typeList.append("Yum")
-        elif repodata["rclass"] != "virtual":
-            if ((yum[1] in repodata and repodata[yum[1]] > 0)
-                or (yum[2] in repodata and len(repodata[yum[2]]) > 0)):
-                typeList.append("Yum")
+        yumc = data.find(ns + "calculateYumMetadata")
+        yumg = data.find(ns + "yumGroupFileNames")
+        yumd = data.find(ns + "yumRootDepth")
+        if yumc != None and yumc.text == "true": typeList.append("Yum")
+        elif rclass != "virtual":
+            try:
+                if ((yumg != None and len(yumg.text) > 0)
+                    or (yumd != None and int(yumd.text) > 0)):
+                    typeList.append("Yum")
+            except: pass
         # check for vcs support if there is no bower support
-        if repodata["rclass"] == "remote" and "Bower" not in typeList:
-            vcs = "enableVcsSupport"
-            if vcs in repodata and repodata[vcs] == True:
-                typeList.append("Vcs")
+        if rclass == "remote" and "Bower" not in typeList:
+            vcs = data.find(ns + "enableVcsSupport")
+            if vcs != None and vcs.text == "true": typeList.append("Vcs")
         # check for p2 support
-        p2 = "p2Support"
-        if p2 in repodata and repodata[p2] == True:
-            typeList.append("P2")
+        if rclass == "remote":
+            p2 = data.find(ns + "p2Support")
+            if p2 != None and p2.text == "true": typeList.append("P2")
+        elif rclass == "virtual":
+            p2 = data.find(ns + "p2")
+            if p2 != None:
+                enabled = p2.find(ns + "enabled")
+                if enabled != None and enabled.text == "true":
+                    typeList.append("P2")
         # if there are no package types so far, grab one from the layout
         if len(typeList) == 0:
-            layout = None
-            if "repoLayoutRef" in repodata:
-                layout = repodata["repoLayoutRef"]
-            if layout == "ivy-default":
-                typeList.append("Ivy")
-            elif layout == "gradle-default":
-                typeList.append("Gradle")
+            layout = data.find(ns + "repoLayoutRef")
+            if layout != None:
+                if layout.text == "ivy-default": typeList.append("Ivy")
+                elif layout.text == "gradle-default": typeList.append("Gradle")
+                else: typeList.append("Maven")
             else: typeList.append("Maven")
-        # add the resulting type list to the json object, and return it
-        self.json[repodata["key"]] = {"status": len(typeList) <= 1,
-                                      "types": typeList[:]}
         return typeList
 
-    # return a json object representing the list of repositories
-    def getRepoList(self, args):
+    # return the list of repositories
+    def getRepoList(self, args, auth):
+        tree = None
+        # if we're reading from an xml, parse the given xml file
         if args.xml:
-            # if we're reading from an xml, precalculate all the data
-            # the list of all the repo keys, to return
-            repoList = []
-            # the precalculated data, to access later
-            self.repodata = {}
-            # parse the given xml file
-            tree = None
-            try:
-                tree = ET.parse(args.url[0])
-            except IOError as ex:
+            try: tree = ET.parse(args.url[0])
+            except (OSError, IOError) as ex:
                 err = "Error: Could not open file: " + str(ex) + "\n"
                 sys.stderr.write(err)
                 sys.exit(1)
-            # the default namespace
-            root = tree.getroot()
-            ns = root.tag[:root.tag.index('}') + 1]
-            # iterate over the different repository types
-            for name in "local", "remote", "virtual":
-                # iterate over all repositories for each type
-                for repo in root.iter(ns + name + "Repository"):
-                    # initialze the json element with its repo type
-                    elem = {"rclass": name}
-                    # add all the given properties to the json element
-                    for el in repo:
-                        # remove the namespace
-                        tag = el.tag[len(ns):]
-                        # if the value is an integer, parse it
-                        try: elem[tag] = int(el.text)
-                        except ValueError:
-                            # if the value is a boolean, parse it
-                            # if not, treat it as a string
-                            if el.text == "true" or el.text == "false":
-                                elem[tag] = el.text == "true"
-                            else: elem[tag] = el.text
-                    # add a P2 support property if there is an enabled P2
-                    p2 = repo.find(ns + "p2")
-                    if name == "virtual" and p2 != None:
-                        enabled = p2.find(ns + "enabled")
-                        if enabled != None:
-                            elem["p2Support"] = enabled.text == "true"
-                    # add the element to the repo list and the json object
-                    repoList.append({"key": elem["key"]})
-                    self.repodata[elem["key"]] = elem
-            # return the repository list
-            return repoList
+        # otherwise, request the data via the REST api
         else:
-            # otherwise, request the data via the REST
-            self.baseurl = args.url[0]
-            if self.baseurl[-1] != '/': self.baseurl += '/'
-            self.baseurl += "api/repositories"
-            return self.requestData(self.baseurl)
-
-    # return a json object containing repository data for the given key
-    def getRepoData(self, repoKey, args):
-        if args.xml:
-            # if we're reading from an xml, just get the precalculated data
-            return self.repodata[repoKey]
-        else:
-            # otherwise, request the data via the REST
-            vp = args.verbose and not args.json
-            repourl = self.baseurl + '/' + repoKey
-            reponame = data["key"] if vp else None
-            return self.requestData(repourl, reponame)
-
-    # given a url, run a get request, and parse and return the resulting json
-    def requestData(self, url, reponame = None):
-        # create a request for the given resource
-        req = urllib2.Request(url)
-        conn = None
-        if self.auth == None:
-            # if authorization info does not exist, attempt to connect
-            try: conn = urllib2.urlopen(req)
-            except urllib2.HTTPError as ex:
-                # if authorization is required, ask the user, and try again
-                if ex.code == 401:
-                    req.add_header('Authorization', self.getAuth())
-                    if reponame != None and self.of == sys.stdout:
-                        self.of.write("Checking repo '" + reponame + "' ... ")
-                    conn = urllib2.urlopen(req)
-                else: raise ex
-        else:
-            # if authorization info already exists, attempt to connect
-            req.add_header('Authorization', self.getAuth())
-            conn = urllib2.urlopen(req)
-        # once a connection is established, read out the json object
-        return json.load(conn)
+            url = args.url[0]
+            if url[-1] != '/': url += '/'
+            url += "api/system/configuration"
+            # create a request for the configuration
+            req = urllib2.Request(url)
+            req.add_header('Authorization', self.getAuth(auth))
+            # read out the xml object
+            tree = ET.parse(urllib2.urlopen(req))
+        # the default namespace
+        root = tree.getroot()
+        ns = root.tag[:root.tag.index('}') + 1]
+        # iterate over the different repository types
+        for name in "local", "remote", "virtual":
+            # iterate over all repositories for each type
+            for repo in root.iter(ns + name + "Repository"):
+                # send back the results
+                yield (repo.find(ns + "key").text,
+                       self.collectTypes(ns, name, repo))
 
     # if authentication information is passed as an option, initialize it
     def initAuth(self, auth):
         # if no auth data is passed in, do nothing for now
-        if auth == None:
-            self.auth = None
-            return
+        if auth == None: return None
         # initialize the user and password
-        user, pasw = None, None
+        userpass = None
+        # if the auth string contains a colon, extract the user and password
         if ':' in auth:
-            # if the auth string contains a colon, extract the user and password
             alist = auth.split(':', 1)
-            user, pasw = alist[0], alist[1]
-        else:
-            # otherwise, just extract the user, and get the password via cli
-            user = auth
-            pasw = getpass.getpass()
+            userpass = alist[0] + ':' + alist[1]
+        # otherwise, just extract the user, and get the password via cli
+        else: userpass = auth + ':' + getpass.getpass()
         # format a Basic auth string so we can pass it as a header
-        userpass = user + ':' + pasw
-        self.auth = "Basic " + base64.b64encode(unicode(userpass), "utf-8")
+        return "Basic " + base64.b64encode(unicode(userpass), "utf-8")
 
     # get the authentication information, and return it
-    def getAuth(self):
+    def getAuth(self, auth):
         # if there is no auth available, get it from the cli
-        if self.auth == None:
+        if auth == None:
             user = raw_input("Authorization required\nUsername: ")
             pasw = getpass.getpass()
             # format a Basic auth string so we can pass it as a header
             userpass = user + ':' + pasw
-            self.auth = "Basic " + base64.b64encode(unicode(userpass), "utf-8")
+            auth = "Basic " + base64.b64encode(unicode(userpass), "utf-8")
         # return the newly created (or the old) auth string
-        return self.auth
+        return auth
 
 # parse the cli options and return an object, or respond accordingly
 def getargs():

@@ -117,8 +117,8 @@ class PackageCheck():
                 sys.stderr.write(err)
                 sys.exit(1)
             # the default namespace
-            ns = "{http://artifactory.jfrog.org/xsd/1.5.13}"
             root = tree.getroot()
+            ns = root.tag[:root.tag.index('}') + 1]
             # iterate over the different repository types
             for name in "local", "remote", "virtual":
                 # iterate over all repositories for each type

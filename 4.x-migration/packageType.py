@@ -13,7 +13,7 @@ class PackageTypeWindow(QtGui.QMainWindow):
         # the xml file being modified
         self.repodata = None
         # the networking handler
-        self.net = QtNetwork.QNetworkAccessManager()
+        self.net = QtNetwork.QNetworkAccessManager(self)
         self.net.finished.connect(self.handleResponse)
         # the status bar
         self.status = self.statusBar()
@@ -50,10 +50,12 @@ class PackageTypeWindow(QtGui.QMainWindow):
 
     # return a layout containing the repository type list box
     def buildTypeList(self):
-        self.model = RepositoryListModel()
+        self.model = RepositoryListModel(self.win)
+        self.filtermodel = MavenFilterModel(self.win)
+        self.filtermodel.setSourceModel(self.model)
         self.typeList = QtGui.QTreeView(self.win)
-        self.typeList.setModel(self.model)
-        self.typeList.setItemDelegate(ComboBoxDelegate())
+        self.typeList.setModel(self.filtermodel)
+        self.typeList.setItemDelegate(ComboBoxDelegate(self.typeList))
         self.typeList.setEditTriggers(QtGui.QAbstractItemView.AllEditTriggers)
         self.typeList.header().setMovable(False)
         hbox = QtGui.QHBoxLayout()
@@ -62,19 +64,24 @@ class PackageTypeWindow(QtGui.QMainWindow):
 
     # return a layout containing the button bar
     def buildButtonBar(self):
-        cancel = QtCore.QCoreApplication.instance().quit
+        def toggleFilterCallback(event):
+            self.filtermodel.mavenOnly = event != 0
+            self.filtermodel.invalidateFilter()
+        self.toggleFilter = QtGui.QCheckBox("Maven Only", self.win)
+        self.toggleFilter.stateChanged.connect(toggleFilterCallback)
         self.buttonConnect = QtGui.QPushButton("Connect", self.win)
         self.buttonConnect.clicked.connect(self.connectCallback)
         self.buttonConnect.setAutoDefault(True)
-        self.buttonCancel = QtGui.QPushButton("Cancel", self.win)
-        self.buttonCancel.clicked.connect(cancel)
-        self.buttonSubmit = QtGui.QPushButton("Submit", self.win)
-        self.buttonSubmit.clicked.connect(self.submitCallback)
+        self.buttonQuit = QtGui.QPushButton("Quit", self.win)
+        self.buttonQuit.clicked.connect(self.quitCallback)
+        self.buttonSave = QtGui.QPushButton("Save", self.win)
+        self.buttonSave.clicked.connect(self.saveCallback)
         hbox = QtGui.QHBoxLayout()
+        hbox.addWidget(self.toggleFilter)
         hbox.addStretch(1)
         hbox.addWidget(self.buttonConnect)
-        hbox.addWidget(self.buttonCancel)
-        hbox.addWidget(self.buttonSubmit)
+        hbox.addWidget(self.buttonQuit)
+        hbox.addWidget(self.buttonSave)
         return hbox
 
     # given a subpath, return a request object
@@ -108,21 +115,44 @@ class PackageTypeWindow(QtGui.QMainWindow):
             self.net.get(request)
         # if we are connected, disconnect
         elif self.stage == self.Connected:
+            # get a list of changes that have been made to the repository data
+            diff = self.model.diffTable()
+            # if changes were made, ask to discard
+            if len(diff) > 0:
+                txt = "Unsaved changes will be discarded. Really disconnect?"
+                msg = QtGui.QMessageBox(self.win)
+                msg.setWindowTitle("Warning: Unsaved Changes")
+                msg.setText("Warning: Unsaved Changes")
+                msg.setInformativeText(txt)
+                msg.setIcon(QtGui.QMessageBox.Warning)
+                msg.addButton(QtGui.QMessageBox.Ok)
+                msg.addButton(QtGui.QMessageBox.Cancel)
+                if msg.exec_() == QtGui.QMessageBox.Cancel: return
             # reset everything and set the state appropriately
             self.repodata = None
             self.model.table = {}
             self.stage = self.Disconnected
             self.status.showMessage("Disconnected successfully", 3000)
 
-    # when the 'Submit' button is pressed
-    def submitCallback(self, event):
+    # when the 'Save' button is pressed
+    def saveCallback(self, event):
         # get a list of changes that have been made to the repository data
         diff = self.model.diffTable()
         # if no changes were made, do nothing more
         if len(diff) < 1:
-            diff = None
             self.status.showMessage("Nothing to do", 3000)
             return
+        # ask to overwrite Artifactory configuration
+        txt = "Any changes made to the Artifactory system configuration while"
+        txt += " this tool has been connected will be overwritten! Save anyway?"
+        msg = QtGui.QMessageBox(self.win)
+        msg.setWindowTitle("Warning")
+        msg.setText("Warning")
+        msg.setInformativeText(txt)
+        msg.setIcon(QtGui.QMessageBox.Warning)
+        msg.addButton(QtGui.QMessageBox.Ok)
+        msg.addButton(QtGui.QMessageBox.Cancel)
+        if msg.exec_() == QtGui.QMessageBox.Cancel: return
         # get a request object to send the new config descriptor file
         request = self.getRequest("api/system/configuration")
         request.setRawHeader("Content-Type", "application/xml")
@@ -143,14 +173,32 @@ class PackageTypeWindow(QtGui.QMainWindow):
                 # set the type and layout of each modified repo
                 ptype = repo.find(ns + "type")
                 layout = repo.find(ns + "repoLayoutRef")
-                if ptype != None: ptype.text = types[diff[key.text][1]]
-                if layout != None: layout.text = layouts[diff[key.text][2]]
+                if ptype != None: ptype.text = types[diff[key.text][2]]
+                if layout != None: layout.text = layouts[diff[key.text][3]]
         # create a file-like object and write the xml to it
         fobj = StringIO.StringIO()
         self.repodata.write(fobj)
         # send the resulting modified xml to the server
         self.net.post(request, fobj.getvalue())
         fobj.close()
+
+    # when the 'Quit' button is pressed
+    def quitCallback(self, event):
+        # get a list of changes that have been made to the repository data
+        diff = self.model.diffTable()
+        # if changes were made, ask to discard
+        if self.stage == self.Connected and len(diff) > 0:
+            txt = "Unsaved changes will be discarded. Really quit?"
+            msg = QtGui.QMessageBox(self.win)
+            msg.setWindowTitle("Warning: Unsaved Changes")
+            msg.setText("Warning: Unsaved Changes")
+            msg.setInformativeText(txt)
+            msg.setIcon(QtGui.QMessageBox.Warning)
+            msg.addButton(QtGui.QMessageBox.Ok)
+            msg.addButton(QtGui.QMessageBox.Cancel)
+            if msg.exec_() == QtGui.QMessageBox.Cancel: return
+        # quit the tool
+        QtCore.QCoreApplication.instance().quit()
 
     # extract the table data from the xml file
     def extractXmlData(self):
@@ -162,6 +210,7 @@ class PackageTypeWindow(QtGui.QMainWindow):
         for layout in root.iter(ns + "repoLayout"):
             name = layout.find(ns + "name")
             if name != None: layouts.append(name.text)
+        layouts.sort()
         # iterate over all the repositories
         for name in "local", "remote", "virtual":
             types = self.model.getPackTypes(name)
@@ -169,14 +218,20 @@ class PackageTypeWindow(QtGui.QMainWindow):
                 # extract the data from each repo entry
                 key = repo.find(ns + "key")
                 ptype = repo.find(ns + "type")
+                descr = repo.find(ns + "description")
                 layout = repo.find(ns + "repoLayoutRef")
                 if key == None or ptype == None: return None
                 if ptype.text not in types: return None
-                rlayout = None
+                # get the description, if one exists
+                rdescr = None
+                if descr != None and len(descr.text) > 0:
+                    rdescr = descr.text
                 # convert the type and layout strings to their index values
+                rlayout = None
                 if layout != None and layout.text in layouts:
                     rlayout = layouts.index(layout.text)
-                elem = (name, types.index(ptype.text), rlayout)
+                rtype = types.index(ptype.text)
+                elem = (rdescr, name, rtype, rlayout)
                 # save the final data set to the dict
                 data[key.text] = elem
         # if no repositories were found, there may have been a problem
@@ -295,7 +350,7 @@ class PackageTypeWindow(QtGui.QMainWindow):
             self.typeList.setHeaderHidden(True)
             self.buttonConnect.setText("Connect")
             self.buttonConnect.setEnabled(True)
-            self.buttonSubmit.setEnabled(False)
+            self.buttonSave.setEnabled(False)
         elif stage == self.Pending:
             self._stage = self.Pending
             self.urlEntry.setEnabled(False)
@@ -305,7 +360,7 @@ class PackageTypeWindow(QtGui.QMainWindow):
             self.typeList.setHeaderHidden(True)
             self.buttonConnect.setEnabled(False)
             self.buttonConnect.setText("Working ...")
-            self.buttonSubmit.setEnabled(False)
+            self.buttonSave.setEnabled(False)
         elif stage == self.Connected:
             self._stage = self.Connected
             self.urlEntry.setEnabled(False)
@@ -315,9 +370,8 @@ class PackageTypeWindow(QtGui.QMainWindow):
             self.typeList.setHeaderHidden(False)
             self.buttonConnect.setText("Disconnect")
             self.buttonConnect.setEnabled(True)
-            self.buttonSubmit.setEnabled(True)
-        else:
-            raise RuntimeError("Improper stage state")
+            self.buttonSave.setEnabled(True)
+        else: raise RuntimeError("Improper stage state")
 
     # connect the stage property to its getter and setter
     stage = property(getStage, setStage)
@@ -329,6 +383,13 @@ class RepositoryListModel(QtCore.QAbstractItemModel):
         # get the default size hint from a combo box
         # this is used to display rows of the proper height
         self.comboSize = QtGui.QComboBox().sizeHint()
+        # list of default layout and package type pairs
+        self.deflayouts = {
+            "bower-default": "bower", "gradle-default": "gradle",
+            "ivy-default": "ivy", "maven-1-default": "maven",
+            "maven-2-default": "maven", "npm-default": "npm",
+            "nuget-default": "nuget", "sbt-default": "sbt",
+            "vcs-default": "vcs", "simple-default": "generic"}
         # _table contains the currently displayed data
         self._table = {}
         # orig contains the original data, so we can diff them later
@@ -336,63 +397,85 @@ class RepositoryListModel(QtCore.QAbstractItemModel):
         # keys allows us to convert between table keys and indexes
         self.keys = []
 
-    # overloaded, get a QModelIndex from a row, col, and parent
+    # override: get a QModelIndex from a row, col, and parent
     def index(self, row, column, parent = QtCore.QModelIndex()):
-        if parent.isValid():
-            return QtCore.QModelIndex()
+        if parent.isValid(): return QtCore.QModelIndex()
         return self.createIndex(row, column, self.keys[row])
 
-    # overloaded, get the parent index given a child index
+    # override: get the parent index given a child index
     # this is always the root index, since it's just one layer
     def parent(self, child):
         return QtCore.QModelIndex()
 
-    # overloaded, get the row count
+    # override: get the row count
     def rowCount(self, parent = QtCore.QModelIndex()):
-        if parent.isValid():
-            return 0
+        if parent.isValid(): return 0
         return len(self._table)
 
-    # overloaded, get the column count
+    # override: get the column count
     def columnCount(self, parent = QtCore.QModelIndex()):
-        return 3
+        return 4
 
-    # overloaded, get the value of an index in a given role
+    # override: get the value of an index in a given role
     def data(self, index, role = QtCore.Qt.DisplayRole):
-        if not index.isValid():
-            return None
+        if not index.isValid(): return None
         col, ptr = index.column(), index.internalPointer()
         # text to display in the table
         # ptr is the key, so show that if we're in the key column
         # otherwise, get the appropriate string given the index
         if role == QtCore.Qt.DisplayRole:
-            if col == 0:
-                return ptr
+            if col == 0: return ptr
+            elif col == 1: return self._table[ptr][1]
             else:
                 lst = None
-                if col == 1: lst = self.getPackTypes(self._table[ptr][0])
-                elif col == 2: lst = self.layoutList
+                if col == 2: lst = self.getPackTypes(self._table[ptr][1])
+                elif col == 3: lst = self.layoutList
                 val = self._table[ptr][col]
-                return "" if val == None else lst[val]
+                return "N/A" if val == None else lst[val]
+        # the N/A string in the virtual layout field should be grey
+        elif role == QtCore.Qt.ForegroundRole and col > 1:
+            if self._table[ptr][col] != None: return None
+            return QtGui.QBrush(QtCore.Qt.gray)
         # index of the combobox option to display
-        elif role == QtCore.Qt.EditRole and col > 0:
+        elif role == QtCore.Qt.EditRole and col > 1:
             return self._table[ptr][col]
+        # display an icon when the layout doesn't match the package type
+        elif role == QtCore.Qt.DecorationRole and col == 3:
+            if self._table[ptr][3] == None: return 0
+            ptype = self.getPackTypes(self._table[ptr][1])[self._table[ptr][2]]
+            layout = self.layoutList[self._table[ptr][3]]
+            if (layout in self.deflayouts and ptype != self.deflayouts[layout]):
+                icon = QtGui.QStyle.SP_MessageBoxInformation
+                return QtGui.qApp.style().standardIcon(icon)
+            return 0
+        # show a tooltip when the layout doesn't match the package type
+        elif role == QtCore.Qt.ToolTipRole and col == 3:
+            if self._table[ptr][3] == None: return None
+            ptype = self.getPackTypes(self._table[ptr][1])[self._table[ptr][2]]
+            layout = self.layoutList[self._table[ptr][3]]
+            if (layout in self.deflayouts and ptype != self.deflayouts[layout]):
+                return "This layout is not the default for this package type."
+            return None
+        # show a tooltip containing the repository description
+        elif role == QtCore.Qt.ToolTipRole and col == 0:
+            if self._table[ptr][0] == None: return None
+            return self._table[ptr][0]
         # return the combobox size hint, so the rows will be big enough
         elif role == QtCore.Qt.SizeHintRole and col == self.columnCount() - 1:
             return self.comboSize
         return None
 
-    # overloaded, return the displayed header string of a given column index
+    # override: return the displayed header string of a given column index
     def headerData(self, section, orientation, role = QtCore.Qt.DisplayRole):
         if orientation != QtCore.Qt.Horizontal or role != QtCore.Qt.DisplayRole:
             return None
-        return ["Repository Key", "Package Type", "Layout"][section]
+        hlist = ["Repository Key", "Repository Type", "Package Type", "Layout"]
+        return hlist[section]
 
-    # overloaded, set a given index to a specified value internally
+    # override: set a given index to a specified value internally
     def setData(self, index, value, role = QtCore.Qt.EditRole):
         col, ptr = index.column(), index.internalPointer()
-        if role != QtCore.Qt.EditRole or col == 0:
-            return False
+        if role != QtCore.Qt.EditRole or col <= 1: return False
         # convert the row to a list (tuples are immutable)
         data = list(self._table[ptr])
         # set the proper element
@@ -401,30 +484,25 @@ class RepositoryListModel(QtCore.QAbstractItemModel):
         self._table[ptr] = tuple(data)
         return True
 
-    # overloaded, return flags for a given index
+    # override: return flags for a given index
     def flags(self, index):
         val = self._table[index.internalPointer()][index.column()]
         # key names are not editable
         # null values are also not editable
-        if index.column() > 0 and val != None:
+        if index.column() > 1 and val != None:
             return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable
-        else:
-            return QtCore.Qt.ItemIsEnabled
+        return QtCore.Qt.ItemIsEnabled
 
     # given an index, return a list of available package types
     def getPackTypesList(self, index):
-        if not index.isValid():
-            return None
+        if not index.isValid(): return None
         ptr = index.internalPointer()
-        return self.getPackTypes(self._table[ptr][0])
+        return self.getPackTypes(self._table[ptr][1])
 
     # given a repo type, return a list of available package types
-    def getPackTypes(self, repoType):
+    def getPackTypes(self, repoType, packTypesMap = {}):
         # memoize these, they aren't going to change
-        if not hasattr(self, "packTypesMap"):
-            self.packTypesMap = {}
-        if repoType in self.packTypesMap:
-            return self.packTypesMap[repoType]
+        if repoType in packTypesMap: return packTypesMap[repoType]
         # all the types that any repo can have
         types = ["bower", "gems", "gradle", "ivy", "maven", "npm", "nuget",
                  "pypi", "sbt"]
@@ -442,15 +520,14 @@ class RepositoryListModel(QtCore.QAbstractItemModel):
         # this is how they are in the Artifactory ui
         types.sort()
         types.append("generic")
-        self.packTypesMap[repoType] = types
+        packTypesMap[repoType] = types
         return types
 
     # list all the rows that have been modified
     def diffTable(self):
         diff = {}
         for key in self.keys:
-            if self._table[key] != self.orig[key]:
-                diff[key] = self._table[key]
+            if self._table[key] != self.orig[key]: diff[key] = self._table[key]
         return diff
 
     # table getter
@@ -469,15 +546,45 @@ class RepositoryListModel(QtCore.QAbstractItemModel):
     # connect the table property to its getter and setter
     table = property(getTable, setTable)
 
+# allows for filtering of non-maven repositories from the list
+class MavenFilterModel(QtGui.QSortFilterProxyModel):
+    def __init__(self, parent = None):
+        QtGui.QSortFilterProxyModel.__init__(self, parent)
+        self.source = None
+        # whether to filter non-maven repos from the list
+        self.mavenOnly = False
+
+    # get the source model so we can access it later
+    def setSourceModel(self, model):
+        QtGui.QSortFilterProxyModel.setSourceModel(self, model)
+        self.source = model
+
+    # filter all the non-maven rows, only when the filter is enabled
+    def filterAcceptsRow(self, row, parent):
+        if not self.mavenOnly: return True
+        rowdata = self.source.table[self.source.keys[row]]
+        mvnidx = self.source.getPackTypes(rowdata[1]).index("maven")
+        return rowdata[2] == mvnidx
+
+    # allow the delegate to access the getPackTypesList function
+    def getPackTypesList(self, index):
+        return self.source.getPackTypesList(self.mapToSource(index))
+
+    # allow the delegate to access the layoutList property
+    def getLayoutList(self):
+        return self.source.layoutList
+
+    layoutList = property(getLayoutList)
+
 # allows data to be modified properly in the QTreeView
 class ComboBoxDelegate(QtGui.QStyledItemDelegate):
     def __init__(self, parent = None):
         QtGui.QStyledItemDelegate.__init__(self, parent)
 
-    # overloaded, create an editor widget for a given field
+    # override: create an editor widget for a given field
     def createEditor(self, parent, option, index):
         col, model = index.column(), index.model()
-        if col == 0:
+        if col <= 1:
             par = QtGui.QStyledItemDelegate
             return par.createEditor(self, parent, option, index)
         # all of these are editable with a combobox
@@ -486,24 +593,25 @@ class ComboBoxDelegate(QtGui.QStyledItemDelegate):
         widget.setFocusPolicy(QtCore.Qt.StrongFocus)
         # comboboxes need lists of items to display
         lst = None
-        if col == 1: lst = model.getPackTypesList(index)
-        elif col == 2: lst = model.layoutList
+        if col == 2: lst = model.getPackTypesList(index)
+        elif col == 3: lst = model.layoutList
         widget.addItems(lst)
         return widget
 
-    # overloaded, set an editor widget to display the data in a given index
+    # override: set an editor widget to display the data in a given index
     def setEditorData(self, editor, index):
-        if index.column() == 0:
-            return
+        if index.column() <= 1: return
         data, _ = index.data(QtCore.Qt.EditRole).toInt()
         editor.setCurrentIndex(data)
 
-    # overloaded, modify the internal data to reflect the editor widget state
+    # override: modify the internal data to reflect the editor widget state
     def setModelData(self, editor, model, index):
-        if index.column() == 0:
-            return
+        if index.column() <= 1: return
         data = QtCore.QVariant(editor.currentIndex())
         model.setData(index, data)
+        if index.column() == 2 and editor.currentText() != "maven":
+            try: model.invalidateFilter()
+            except AttributeError: pass
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)

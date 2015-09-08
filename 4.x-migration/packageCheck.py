@@ -14,7 +14,8 @@ class PackageCheck():
         # set the output file, if specified
         outf = None
         try:
-            if args.output_file != None: outf = open(args.output_file, "w")
+            if args.output_file != None and args.output_file != '-':
+                outf = open(args.output_file, 'w')
             else: outf = sys.stdout
         except (OSError, IOError) as ex:
             err = "Error: Could not open file: " + str(ex) + "\n"
@@ -97,7 +98,9 @@ class PackageCheck():
         tree = None
         # if we're reading from an xml, parse the given xml file
         if args.xml:
-            try: tree = ET.parse(args.url[0])
+            fname = args.url[0]
+            if fname == '-': fname = sys.stdin
+            try: tree = ET.parse(fname)
             except (OSError, IOError) as ex:
                 err = "Error: Could not open file: " + str(ex) + "\n"
                 sys.stderr.write(err)

@@ -54,6 +54,7 @@ class PackageTypeWindow(QtGui.QMainWindow):
         self.filtermodel = MavenFilterModel(self.win)
         self.filtermodel.setSourceModel(self.model)
         self.typeList = QtGui.QTreeView(self.win)
+        self.typeList.setSortingEnabled(True)
         self.typeList.setModel(self.filtermodel)
         self.typeList.setItemDelegate(ComboBoxDelegate(self.typeList))
         self.typeList.setEditTriggers(QtGui.QAbstractItemView.AllEditTriggers)
@@ -69,9 +70,12 @@ class PackageTypeWindow(QtGui.QMainWindow):
             self.filtermodel.invalidateFilter()
         self.toggleFilter = QtGui.QCheckBox("Maven Only", self.win)
         self.toggleFilter.stateChanged.connect(toggleFilterCallback)
+        self.buttonExport = QtGui.QPushButton("Export", self.win)
+        tooltip = "Export repositories with non-default layouts"
+        self.buttonExport.setToolTip(tooltip)
+        self.buttonExport.clicked.connect(self.exportCallback)
         self.buttonConnect = QtGui.QPushButton("Connect", self.win)
         self.buttonConnect.clicked.connect(self.connectCallback)
-        self.buttonConnect.setAutoDefault(True)
         self.buttonQuit = QtGui.QPushButton("Quit", self.win)
         self.buttonQuit.clicked.connect(self.quitCallback)
         self.buttonSave = QtGui.QPushButton("Save", self.win)
@@ -79,6 +83,7 @@ class PackageTypeWindow(QtGui.QMainWindow):
         hbox = QtGui.QHBoxLayout()
         hbox.addWidget(self.toggleFilter)
         hbox.addStretch(1)
+        hbox.addWidget(self.buttonExport)
         hbox.addWidget(self.buttonConnect)
         hbox.addWidget(self.buttonQuit)
         hbox.addWidget(self.buttonSave)
@@ -91,6 +96,42 @@ class PackageTypeWindow(QtGui.QMainWindow):
         request = QtNetwork.QNetworkRequest(url)
         request.setRawHeader("Authorization", self.auth)
         return request
+
+    # when the 'Export' button is pressed
+    def exportCallback(self, event):
+        table = []
+        # gather every line in the table with a non-default layout
+        for repo in self.model.table:
+            line = self.model.table[repo]
+            if line[3] == None: continue
+            ptype = self.model.getPackTypes(line[1])[line[2]]
+            layout = self.model.layoutList[line[3]]
+            layouts = self.model.deflayouts
+            if layout not in layouts or (layout in layouts
+                and ptype not in layouts[layout]):
+                newlayout = None
+                # find the default layout for each package type
+                for lt in layouts:
+                    if ptype in layouts[lt]:
+                        newlayout = lt
+                        break
+                table.append((repo, ptype, layout, newlayout))
+        # if the entire table has default layouts, don't do anything
+        if len(table) <= 0:
+            self.status.showMessage("Nothing to export", 3000)
+            return
+        # get a file to export to
+        title = "Export Repositories with Non-Default Layouts"
+        fname = QtGui.QFileDialog.getSaveFileName(self.win, title)
+        # save to the file
+        try:
+            with open(fname, 'w') as f:
+                for line in table:
+                    ln = line[0] + " (" + line[1] + "): layout is "
+                    ln += line[2] + ", default is " + line[3] + "\n"
+                    f.write(ln)
+            self.status.showMessage("Exported successfully", 3000)
+        except IOError as ex: self.status.showMessage(str(ex), 3000)
 
     # when the 'Connect' button is pressed
     def connectCallback(self, event):
@@ -297,14 +338,15 @@ class PackageTypeWindow(QtGui.QMainWindow):
                 # if there was a network error, fail and print
                 err = self.printNetworkError(reply)
                 reply.abort()
+                self.status.showMessage(err, 3000)
+                self.stage = self.Connected
             else:
                 # otherwise, print success
                 err = "Configuration updated successfully"
                 reply.close()
-                # update the original model to match the new one
-                self.model.orig = self.model.table.copy()
-            self.status.showMessage(err, 3000)
-            self.stage = self.Connected
+                self.status.showMessage(err, 3000)
+                # send a get request for the config descriptor file again
+                self.net.get(self.getRequest("api/system/configuration"))
         except:
             reply.abort()
             self.stage = self.Connected
@@ -348,6 +390,7 @@ class PackageTypeWindow(QtGui.QMainWindow):
             self.passEntry.setEnabled(True)
             self.typeList.setEnabled(False)
             self.typeList.setHeaderHidden(True)
+            self.buttonExport.setEnabled(False)
             self.buttonConnect.setText("Connect")
             self.buttonConnect.setEnabled(True)
             self.buttonSave.setEnabled(False)
@@ -358,6 +401,7 @@ class PackageTypeWindow(QtGui.QMainWindow):
             self.passEntry.setEnabled(False)
             self.typeList.setEnabled(False)
             self.typeList.setHeaderHidden(True)
+            self.buttonExport.setEnabled(False)
             self.buttonConnect.setEnabled(False)
             self.buttonConnect.setText("Working ...")
             self.buttonSave.setEnabled(False)
@@ -368,6 +412,7 @@ class PackageTypeWindow(QtGui.QMainWindow):
             self.passEntry.setEnabled(False)
             self.typeList.setEnabled(True)
             self.typeList.setHeaderHidden(False)
+            self.buttonExport.setEnabled(True)
             self.buttonConnect.setText("Disconnect")
             self.buttonConnect.setEnabled(True)
             self.buttonSave.setEnabled(True)
@@ -385,11 +430,13 @@ class RepositoryListModel(QtCore.QAbstractItemModel):
         self.comboSize = QtGui.QComboBox().sizeHint()
         # list of default layout and package type pairs
         self.deflayouts = {
-            "bower-default": "bower", "gradle-default": "gradle",
-            "ivy-default": "ivy", "maven-1-default": "maven",
-            "maven-2-default": "maven", "npm-default": "npm",
-            "nuget-default": "nuget", "sbt-default": "sbt",
-            "vcs-default": "vcs", "simple-default": "generic"}
+            "bower-default": ["bower"], "gradle-default": ["gradle"],
+            "ivy-default": ["ivy"], "maven-1-default": ["maven"],
+            "maven-2-default": ["maven"], "npm-default": ["npm"],
+            "nuget-default": ["nuget"], "sbt-default": ["sbt"],
+            "vcs-default": ["vcs"], "simple-default": [
+                "generic", "debian", "docker", "gems", "gitlfs",
+                "pypi", "vagrant", "yum", "p2"]}
         # _table contains the currently displayed data
         self._table = {}
         # orig contains the original data, so we can diff them later
@@ -444,7 +491,8 @@ class RepositoryListModel(QtCore.QAbstractItemModel):
             if self._table[ptr][3] == None: return 0
             ptype = self.getPackTypes(self._table[ptr][1])[self._table[ptr][2]]
             layout = self.layoutList[self._table[ptr][3]]
-            if (layout in self.deflayouts and ptype != self.deflayouts[layout]):
+            if layout not in self.deflayouts or (layout in self.deflayouts
+                and ptype not in self.deflayouts[layout]):
                 icon = QtGui.QStyle.SP_MessageBoxInformation
                 return QtGui.qApp.style().standardIcon(icon)
             return 0
@@ -453,7 +501,8 @@ class RepositoryListModel(QtCore.QAbstractItemModel):
             if self._table[ptr][3] == None: return None
             ptype = self.getPackTypes(self._table[ptr][1])[self._table[ptr][2]]
             layout = self.layoutList[self._table[ptr][3]]
-            if (layout in self.deflayouts and ptype != self.deflayouts[layout]):
+            if layout not in self.deflayouts or (layout in self.deflayouts
+                and ptype not in self.deflayouts[layout]):
                 return "This layout is not the default for this package type."
             return None
         # show a tooltip containing the repository description

@@ -17,6 +17,8 @@ class PackageTypeWindow(QtGui.QMainWindow):
         self.net.finished.connect(self.handleResponse)
         # the status bar
         self.status = self.statusBar()
+        self.progress = QtGui.QProgressBar(self)
+        self.progress.hide()
         # create the window and populate it
         self.win = QtGui.QWidget(self)
         self.win.setLayout(self.buildUI())
@@ -153,7 +155,9 @@ class PackageTypeWindow(QtGui.QMainWindow):
             msg = "Querying '" + request.url().toString() + "' ..."
             self.status.showMessage(msg)
             # send a get request
-            self.net.get(request)
+            response = self.net.get(request)
+            response.error.connect(self.handleNetError)
+            response.downloadProgress.connect(self.handleProgress)
         # if we are connected, disconnect
         elif self.stage == self.Connected:
             # get a list of changes that have been made to the repository data
@@ -220,7 +224,9 @@ class PackageTypeWindow(QtGui.QMainWindow):
         fobj = StringIO.StringIO()
         self.repodata.write(fobj)
         # send the resulting modified xml to the server
-        self.net.post(request, fobj.getvalue())
+        response = self.net.post(request, fobj.getvalue())
+        response.error.connect(self.handleNetError)
+        response.uploadProgress.connect(self.handleProgress)
         fobj.close()
 
     # when the 'Quit' button is pressed
@@ -297,6 +303,7 @@ class PackageTypeWindow(QtGui.QMainWindow):
                     fobj.close()
                 except IOError:
                     xmlObj = None
+                if xmlObj == None:
                     err = "Error: Invalid xml resource"
             if err == None:
                 # if everything went fine, close the connection
@@ -346,7 +353,10 @@ class PackageTypeWindow(QtGui.QMainWindow):
                 reply.close()
                 self.status.showMessage(err, 3000)
                 # send a get request for the config descriptor file again
-                self.net.get(self.getRequest("api/system/configuration"))
+                request = self.getRequest("api/system/configuration")
+                response = self.net.get(request)
+                response.error.connect(self.handleNetError)
+                response.downloadProgress.connect(self.handleProgress)
         except:
             reply.abort()
             self.stage = self.Connected
@@ -360,13 +370,20 @@ class PackageTypeWindow(QtGui.QMainWindow):
         if redirect.isValid():
             request = reply.request()
             request.setUrl(reply.url().resolved(redirect))
-            self.net.createRequest(reply.operation(), request)
+            response = self.net.createRequest(reply.operation(), request)
+            response.error.connect(self.handleNetError)
+            post = QtNetwork.QNetworkAccessManager.PostOperation
+            if reply.operation() == post:
+                response.uploadProgress.connect(self.handleProgress)
+            else:
+                response.downloadProgress.connect(self.handleProgress)
         elif reply.operation() == QtNetwork.QNetworkAccessManager.GetOperation:
             # if it's a response to a get, we're getting the descriptor
             self.getConfigCallback(reply)
         elif reply.operation() == QtNetwork.QNetworkAccessManager.PostOperation:
             # if it's a response to a post, we're posting the descriptor
             self.postConfigCallback(reply)
+        else: raise RuntimeError("Unanticipated HTTP response")
 
     # extract the network error information and print it to the status bar
     def printNetworkError(self, reply):
@@ -374,8 +391,19 @@ class PackageTypeWindow(QtGui.QMainWindow):
         messageAttr = QtNetwork.QNetworkRequest.HttpReasonPhraseAttribute
         status = reply.attribute(statusAttr).toString()
         message = reply.attribute(messageAttr).toString()
-        err = "Network Error: " + status + " '" + message + "'"
-        self.status.showMessage(err, 3000)
+        return "Network Error: " + status + " '" + message + "'"
+
+    # if a network error occurs, print it somwhere
+    def handleNetError(self, error):
+        raise RuntimeError("Network Error: " + str(error))
+
+    # when progress is made in the download/upload, update the progress bar
+    def handleProgress(self, recvd, total):
+        if total < 0:
+            if self.progress.maximum() != 0: self.progress.setMaximum(0)
+        else:
+            if self.progress.maximum() != 100: self.progress.setMaximum(100)
+            self.progress.setValue((100*recvd)/total)
 
     # stage getter
     def getStage(self):
@@ -394,6 +422,7 @@ class PackageTypeWindow(QtGui.QMainWindow):
             self.buttonConnect.setText("Connect")
             self.buttonConnect.setEnabled(True)
             self.buttonSave.setEnabled(False)
+            self.status.removeWidget(self.progress)
         elif stage == self.Pending:
             self._stage = self.Pending
             self.urlEntry.setEnabled(False)
@@ -405,6 +434,10 @@ class PackageTypeWindow(QtGui.QMainWindow):
             self.buttonConnect.setEnabled(False)
             self.buttonConnect.setText("Working ...")
             self.buttonSave.setEnabled(False)
+            self.progress.reset()
+            self.progress.setRange(0, 0)
+            self.status.addPermanentWidget(self.progress)
+            self.progress.show()
         elif stage == self.Connected:
             self._stage = self.Connected
             self.urlEntry.setEnabled(False)
@@ -416,6 +449,7 @@ class PackageTypeWindow(QtGui.QMainWindow):
             self.buttonConnect.setText("Disconnect")
             self.buttonConnect.setEnabled(True)
             self.buttonSave.setEnabled(True)
+            self.status.removeWidget(self.progress)
         else: raise RuntimeError("Improper stage state")
 
     # connect the stage property to its getter and setter
@@ -444,26 +478,26 @@ class RepositoryListModel(QtCore.QAbstractItemModel):
         # keys allows us to convert between table keys and indexes
         self.keys = []
 
-    # override: get a QModelIndex from a row, col, and parent
+    # overload: get a QModelIndex from a row, col, and parent
     def index(self, row, column, parent = QtCore.QModelIndex()):
         if parent.isValid(): return QtCore.QModelIndex()
         return self.createIndex(row, column, self.keys[row])
 
-    # override: get the parent index given a child index
+    # overload: get the parent index given a child index
     # this is always the root index, since it's just one layer
     def parent(self, child):
         return QtCore.QModelIndex()
 
-    # override: get the row count
+    # overload: get the row count
     def rowCount(self, parent = QtCore.QModelIndex()):
         if parent.isValid(): return 0
         return len(self._table)
 
-    # override: get the column count
+    # overload: get the column count
     def columnCount(self, parent = QtCore.QModelIndex()):
         return 4
 
-    # override: get the value of an index in a given role
+    # overload: get the value of an index in a given role
     def data(self, index, role = QtCore.Qt.DisplayRole):
         if not index.isValid(): return None
         col, ptr = index.column(), index.internalPointer()
@@ -514,14 +548,14 @@ class RepositoryListModel(QtCore.QAbstractItemModel):
             return self.comboSize
         return None
 
-    # override: return the displayed header string of a given column index
+    # overload: return the displayed header string of a given column index
     def headerData(self, section, orientation, role = QtCore.Qt.DisplayRole):
         if orientation != QtCore.Qt.Horizontal or role != QtCore.Qt.DisplayRole:
             return None
         hlist = ["Repository Key", "Repository Type", "Package Type", "Layout"]
         return hlist[section]
 
-    # override: set a given index to a specified value internally
+    # overload: set a given index to a specified value internally
     def setData(self, index, value, role = QtCore.Qt.EditRole):
         col, ptr = index.column(), index.internalPointer()
         if role != QtCore.Qt.EditRole or col <= 1: return False
@@ -533,7 +567,7 @@ class RepositoryListModel(QtCore.QAbstractItemModel):
         self._table[ptr] = tuple(data)
         return True
 
-    # override: return flags for a given index
+    # overload: return flags for a given index
     def flags(self, index):
         val = self._table[index.internalPointer()][index.column()]
         # key names are not editable
@@ -553,14 +587,14 @@ class RepositoryListModel(QtCore.QAbstractItemModel):
         # memoize these, they aren't going to change
         if repoType in packTypesMap: return packTypesMap[repoType]
         # all the types that any repo can have
-        types = ["bower", "gems", "gradle", "ivy", "maven", "npm", "nuget",
-                 "pypi", "sbt"]
+        types = ["bower", "docker", "gems", "gradle", "ivy", "maven", "npm",
+                 "nuget", "pypi", "sbt"]
         # all the types that local repos can have
         if repoType == "local":
-            types.extend(["debian", "docker", "gitlfs", "vagrant", "yum"])
+            types.extend(["debian", "gitlfs", "vagrant", "yum"])
         # all the types that remote repos can have
         elif repoType == "remote":
-            types.extend(["debian", "docker", "p2", "vcs", "yum"])
+            types.extend(["debian", "p2", "vcs", "yum"])
         # all the types that virtual repos can have
         elif repoType == "virtual":
             types.extend(["p2"])
@@ -603,12 +637,12 @@ class MavenFilterModel(QtGui.QSortFilterProxyModel):
         # whether to filter non-maven repos from the list
         self.mavenOnly = False
 
-    # get the source model so we can access it later
+    # overload: get the source model so we can access it later
     def setSourceModel(self, model):
         QtGui.QSortFilterProxyModel.setSourceModel(self, model)
         self.source = model
 
-    # filter all the non-maven rows, only when the filter is enabled
+    # overload: filter all the non-maven rows, only when the filter is enabled
     def filterAcceptsRow(self, row, parent):
         if not self.mavenOnly: return True
         rowdata = self.source.table[self.source.keys[row]]
@@ -630,7 +664,7 @@ class ComboBoxDelegate(QtGui.QStyledItemDelegate):
     def __init__(self, parent = None):
         QtGui.QStyledItemDelegate.__init__(self, parent)
 
-    # override: create an editor widget for a given field
+    # overload: create an editor widget for a given field
     def createEditor(self, parent, option, index):
         col, model = index.column(), index.model()
         if col <= 1:
@@ -647,13 +681,13 @@ class ComboBoxDelegate(QtGui.QStyledItemDelegate):
         widget.addItems(lst)
         return widget
 
-    # override: set an editor widget to display the data in a given index
+    # overload: set an editor widget to display the data in a given index
     def setEditorData(self, editor, index):
         if index.column() <= 1: return
         data, _ = index.data(QtCore.Qt.EditRole).toInt()
         editor.setCurrentIndex(data)
 
-    # override: modify the internal data to reflect the editor widget state
+    # overload: modify the internal data to reflect the editor widget state
     def setModelData(self, editor, model, index):
         if index.column() <= 1: return
         data = QtCore.QVariant(editor.currentIndex())

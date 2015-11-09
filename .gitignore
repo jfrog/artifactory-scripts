@@ -1,4 +1,7 @@
 # Created by .gitignore support plugin (hsz.mobi)
+
+local.sh
+
 ### Emacs template
 # -*- mode: gitignore; -*-
 *~

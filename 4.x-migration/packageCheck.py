@@ -121,7 +121,13 @@ class PackageCheck():
         # iterate over the different repository types
         for name in "local", "remote", "virtual":
             # iterate over all repositories for each type
-            for repo in root.iter(ns + name + "Repository"):
+            iterator = None
+            try:
+                iterator = root.iter(ns + name + "Repository")
+            except AttributeError:
+                # depricated in Python 2.7
+                iterator = root.getiterator(ns + name + "Repository")
+            for repo in iterator:
                 # send back the results
                 yield (repo.find(ns + "key").text,
                        self.collectTypes(ns, name, repo))

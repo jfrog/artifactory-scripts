@@ -1,0 +1,23 @@
+in the HTTP block: 
+# disable proxy_cache on HEAD request methods in certain cases
+map $request_method $proxy_cache_enable {
+
+    'HEAD'          'off';
+
+    'GET'           'cache_one';
+
+}
+
+
+
+in my server {} block:
+    location ~ ^/v2/.*/blobs/.*$ {
+        proxy_cache             $proxy_cache_enable;
+
+        include                 includes/proxy_common;
+
+        proxy_pass              %proxy_destination_proto%://backend;
+
+        proxy_cache_valid       4d;
+
+    }

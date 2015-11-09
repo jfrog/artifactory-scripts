@@ -271,7 +271,7 @@ class PackageTypeWindow(QtGui.QMainWindow):
                 if ptype.text not in types: return None
                 # get the description, if one exists
                 rdescr = None
-                if descr != None and len(descr.text) > 0:
+                if descr != None and descr.text != None and len(descr.text) > 0:
                     rdescr = descr.text
                 # convert the type and layout strings to their index values
                 rlayout = None

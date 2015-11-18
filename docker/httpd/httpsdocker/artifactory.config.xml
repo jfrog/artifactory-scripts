@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!-- // @formatter:off -->
 
 <!--
@@ -20,11 +20,11 @@
   -->
 <config xmlns="http://artifactory.jfrog.org/xsd/1.6.3"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.jfrog.org/xsd/artifactory-v1_6_3.xsd">
+        xsi:schemaLocation="http://artifactory.jfrog.org/xsd/1.6.3 http://www.jfrog.org/xsd/artifactory-v1_6_3.xsd">
 
-<!--
-    enable/disable anonymous downloads
-    -->
+    <!--
+        enable/disable anonymous downloads
+        -->
     <security>
         <anonAccessEnabled>true</anonAccessEnabled>
         <anonAccessToBuildInfosDisabled>false</anonAccessToBuildInfosDisabled>
@@ -64,48 +64,49 @@
     <localRepositories>
         <localRepository>
             <key>libs-release-local</key>
-            <description>Local repository for in-house libraries</description>
+            <type>maven</type>
             <repoLayoutRef>maven-2-default</repoLayoutRef>
             <handleReleases>true</handleReleases>
             <handleSnapshots>false</handleSnapshots>
         </localRepository>
         <localRepository>
             <key>libs-snapshot-local</key>
-            <description>Local repository for in-house snapshots</description>
+            <type>maven</type>
             <repoLayoutRef>maven-2-default</repoLayoutRef>
             <handleReleases>false</handleReleases>
             <handleSnapshots>true</handleSnapshots>
         </localRepository>
         <localRepository>
             <key>plugins-release-local</key>
-            <description>Local repository for plugins</description>
+            <type>maven</type>
             <repoLayoutRef>maven-2-default</repoLayoutRef>
             <handleReleases>true</handleReleases>
             <handleSnapshots>false</handleSnapshots>
         </localRepository>
         <localRepository>
             <key>plugins-snapshot-local</key>
-            <description>Local repository for plugins snapshots</description>
+            <type>maven</type>
             <repoLayoutRef>maven-2-default</repoLayoutRef>
             <handleReleases>false</handleReleases>
             <handleSnapshots>true</handleSnapshots>
         </localRepository>
         <localRepository>
             <key>ext-release-local</key>
-            <description>Local repository for third party libraries</description>
+            <type>maven</type>
             <repoLayoutRef>maven-2-default</repoLayoutRef>
             <handleReleases>true</handleReleases>
             <handleSnapshots>false</handleSnapshots>
         </localRepository>
         <localRepository>
             <key>ext-snapshot-local</key>
-            <description>Local repository for third party snapshots</description>
+            <type>maven</type>
             <repoLayoutRef>maven-2-default</repoLayoutRef>
             <handleReleases>false</handleReleases>
             <handleSnapshots>true</handleSnapshots>
         </localRepository>
         <localRepository>
             <key>docker-dev-local</key>
+            <type>docker</type>
             <repoLayoutRef>maven-2-default</repoLayoutRef>
             <dockerApiVersion>V1</dockerApiVersion>
             <handleReleases>true</handleReleases>
@@ -113,6 +114,7 @@
         </localRepository>
         <localRepository>
             <key>docker-prod-local</key>
+            <type>docker</type>
             <repoLayoutRef>maven-2-default</repoLayoutRef>
             <dockerApiVersion>V1</dockerApiVersion>
             <handleReleases>true</handleReleases>
@@ -120,15 +122,19 @@
         </localRepository>
         <localRepository>
             <key>docker-dev-local2</key>
+            <type>docker</type>
             <repoLayoutRef>maven-2-default</repoLayoutRef>
             <dockerApiVersion>V2</dockerApiVersion>
+            <forceDockerAuthentication>true</forceDockerAuthentication>
             <handleReleases>true</handleReleases>
             <handleSnapshots>true</handleSnapshots>
         </localRepository>
         <localRepository>
             <key>docker-prod-local2</key>
+            <type>docker</type>
             <repoLayoutRef>maven-2-default</repoLayoutRef>
             <dockerApiVersion>V2</dockerApiVersion>
+            <forceDockerAuthentication>true</forceDockerAuthentication>
             <handleReleases>true</handleReleases>
             <handleSnapshots>true</handleSnapshots>
         </localRepository>
@@ -136,16 +142,18 @@
 
     <remoteRepositories>
         <remoteRepository>
-             <key>docker-remote</key>
-             <repoLayoutRef>maven-2-default</repoLayoutRef>
-             <dockerApiVersion>V1</dockerApiVersion>
-             <handleReleases>true</handleReleases>
-             <handleSnapshots>true</handleSnapshots>
-             <url>https://registry-1.docker.io</url>
-             <enableTokenAuthentication>true</enableTokenAuthentication>
-         </remoteRepository>
+            <key>docker-remote</key>
+            <type>docker</type>
+            <repoLayoutRef>maven-2-default</repoLayoutRef>
+            <dockerApiVersion>V1</dockerApiVersion>
+            <handleReleases>true</handleReleases>
+            <handleSnapshots>true</handleSnapshots>
+            <url>https://registry-1.docker.io</url>
+            <enableTokenAuthentication>true</enableTokenAuthentication>
+        </remoteRepository>
         <remoteRepository>
             <key>jfrog-docker-registry</key>
+            <type>docker</type>
             <repoLayoutRef>maven-2-default</repoLayoutRef>
             <dockerApiVersion>V1</dockerApiVersion>
             <handleReleases>true</handleReleases>
@@ -153,9 +161,9 @@
             <url>https://jfrog-docker-reg2.bintray.io</url>
             <enableTokenAuthentication>false</enableTokenAuthentication>
         </remoteRepository>
-         <remoteRepository>
+        <remoteRepository>
             <key>jcenter</key>
-            <description>Bintray Central Java repository</description>
+            <type>maven</type>
             <repoLayoutRef>maven-2-default</repoLayoutRef>
             <handleReleases>true</handleReleases>
             <handleSnapshots>false</handleSnapshots>
@@ -166,8 +174,9 @@
     <virtualRepositories>
         <virtualRepository>
             <key>docker-virtual</key>
-            <artifactoryRequestsCanRetrieveRemoteArtifacts>true</artifactoryRequestsCanRetrieveRemoteArtifacts>
+            <type>docker</type>
             <forceDockerAuthentication>true</forceDockerAuthentication>
+            <artifactoryRequestsCanRetrieveRemoteArtifacts>true</artifactoryRequestsCanRetrieveRemoteArtifacts>
             <repositories>
                 <repositoryRef>docker-dev-local2</repositoryRef>
                 <repositoryRef>docker-prod-local2</repositoryRef>
@@ -182,6 +191,7 @@
         -->
         <virtualRepository>
             <key>remote-repos</key>
+            <type>maven</type>
             <artifactoryRequestsCanRetrieveRemoteArtifacts>true</artifactoryRequestsCanRetrieveRemoteArtifacts>
             <repositories>
                 <repositoryRef>jcenter</repositoryRef>
@@ -189,6 +199,7 @@
         </virtualRepository>
         <virtualRepository>
             <key>libs-release</key>
+            <type>maven</type>
             <repositories>
                 <repositoryRef>libs-release-local</repositoryRef>
                 <repositoryRef>ext-release-local</repositoryRef>
@@ -197,6 +208,7 @@
         </virtualRepository>
         <virtualRepository>
             <key>plugins-release</key>
+            <type>maven</type>
             <repositories>
                 <repositoryRef>plugins-release-local</repositoryRef>
                 <repositoryRef>ext-release-local</repositoryRef>
@@ -205,6 +217,7 @@
         </virtualRepository>
         <virtualRepository>
             <key>libs-snapshot</key>
+            <type>maven</type>
             <repositories>
                 <repositoryRef>libs-snapshot-local</repositoryRef>
                 <repositoryRef>ext-snapshot-local</repositoryRef>
@@ -213,6 +226,7 @@
         </virtualRepository>
         <virtualRepository>
             <key>plugins-snapshot</key>
+            <type>maven</type>
             <repositories>
                 <repositoryRef>plugins-snapshot-local</repositoryRef>
                 <repositoryRef>ext-snapshot-local</repositoryRef>
@@ -599,23 +613,33 @@
     <repoLayouts>
         <repoLayout>
             <name>maven-2-default</name>
-            <artifactPathPattern>[orgPath]/[module]/[baseRev](-[folderItegRev])/[module]-[baseRev](-[fileItegRev])(-[classifier]).[ext]</artifactPathPattern>
+            <artifactPathPattern>
+                [orgPath]/[module]/[baseRev](-[folderItegRev])/[module]-[baseRev](-[fileItegRev])(-[classifier]).[ext]
+            </artifactPathPattern>
             <distinctiveDescriptorPathPattern>true</distinctiveDescriptorPathPattern>
-            <descriptorPathPattern>[orgPath]/[module]/[baseRev](-[folderItegRev])/[module]-[baseRev](-[fileItegRev])(-[classifier]).pom</descriptorPathPattern>
+            <descriptorPathPattern>
+                [orgPath]/[module]/[baseRev](-[folderItegRev])/[module]-[baseRev](-[fileItegRev])(-[classifier]).pom
+            </descriptorPathPattern>
             <folderIntegrationRevisionRegExp>SNAPSHOT</folderIntegrationRevisionRegExp>
             <fileIntegrationRevisionRegExp>SNAPSHOT|(?:(?:[0-9]{8}.[0-9]{6})-(?:[0-9]+))</fileIntegrationRevisionRegExp>
         </repoLayout>
         <repoLayout>
             <name>ivy-default</name>
-            <artifactPathPattern>[org]/[module]/[baseRev](-[folderItegRev])/[type]s/[module](-[classifier])-[baseRev](-[fileItegRev]).[ext]</artifactPathPattern>
+            <artifactPathPattern>
+                [org]/[module]/[baseRev](-[folderItegRev])/[type]s/[module](-[classifier])-[baseRev](-[fileItegRev]).[ext]
+            </artifactPathPattern>
             <distinctiveDescriptorPathPattern>true</distinctiveDescriptorPathPattern>
-            <descriptorPathPattern>[org]/[module]/[baseRev](-[folderItegRev])/[type]s/ivy-[baseRev](-[fileItegRev]).xml</descriptorPathPattern>
+            <descriptorPathPattern>
+                [org]/[module]/[baseRev](-[folderItegRev])/[type]s/ivy-[baseRev](-[fileItegRev]).xml
+            </descriptorPathPattern>
             <folderIntegrationRevisionRegExp>\d{14}</folderIntegrationRevisionRegExp>
             <fileIntegrationRevisionRegExp>\d{14}</fileIntegrationRevisionRegExp>
         </repoLayout>
         <repoLayout>
             <name>gradle-default</name>
-            <artifactPathPattern>[org]/[module]/[baseRev](-[folderItegRev])/[module]-[baseRev](-[fileItegRev])(-[classifier]).[ext]</artifactPathPattern>
+            <artifactPathPattern>
+                [org]/[module]/[baseRev](-[folderItegRev])/[module]-[baseRev](-[fileItegRev])(-[classifier]).[ext]
+            </artifactPathPattern>
             <distinctiveDescriptorPathPattern>true</distinctiveDescriptorPathPattern>
             <descriptorPathPattern>[org]/[module]/ivy-[baseRev](-[fileItegRev]).xml</descriptorPathPattern>
             <folderIntegrationRevisionRegExp>\d{14}</folderIntegrationRevisionRegExp>
@@ -623,7 +647,8 @@
         </repoLayout>
         <repoLayout>
             <name>maven-1-default</name>
-            <artifactPathPattern>[org]/[type]s/[module]-[baseRev](-[fileItegRev])(-[classifier]).[ext]</artifactPathPattern>
+            <artifactPathPattern>[org]/[type]s/[module]-[baseRev](-[fileItegRev])(-[classifier]).[ext]
+            </artifactPathPattern>
             <distinctiveDescriptorPathPattern>true</distinctiveDescriptorPathPattern>
             <descriptorPathPattern>[org]/[type]s/[module]-[baseRev](-[fileItegRev]).pom</descriptorPathPattern>
             <folderIntegrationRevisionRegExp>.+</folderIntegrationRevisionRegExp>
@@ -641,4 +666,12 @@
         <!-- by default cleanup once a day at 05:00AM -->
         <cronExp>0 12 0 * * ?</cronExp>
     </virtualCacheCleanupConfig>
+    <quotaConfig/>
+    <externalProviders/>
+    <systemMessageConfig/>
+    <folderDownloadConfig>
+        <enabled>false</enabled>
+        <maxDownloadSizeMb>0</maxDownloadSizeMb>
+        <maxConcurrentRequests>0</maxConcurrentRequests>
+    </folderDownloadConfig>
 </config>

@@ -1,8 +1,8 @@
-Nginx SSL with Wildcard Docker Configuration
-===========================================
+Apache HTTPD artifactory docker registry using wildcard DNS/SSL
+===============================================================
 
-This is a SSL configuration for nginx with multiple docker repositories using a DNS wildcard.  It assumes artifactory and 
-nginx are running on the same machine. You can use this artifactory.conf as a starting point for your installation.
+This is a SSL configuration for apache httpd with multiple docker repositories using a DNS wildcard.  It assumes artifactory and 
+apache httpd are running on the same machine. You can use this artifactory.conf as a starting point for your installation.
 
 This takes more configuration of the environment it's running on than the other versions.  To use this you need
 to create a wildcard DNS entry for the machine.  If you don't want to use DNS you can use the /etc/hosts file, however
@@ -21,13 +21,11 @@ certificate.
 
 To run the demo:
 
-<pre>
-docker build --rm --tag art_nginx_https_docker .
-docker run -d --name art_nginx_https_dockers art_nginx_https_dockers
+docker build --rm --tag art_apache_https_docker .
+docker run -d --name art_apache_https_docker art_apache_https_docker
 
 #To find the IP of the newly running container use:
-docker inspect --format '{{ .NetworkSettings.IPAddress }}' art_nginx_https_dockers
-</pre>
+docker inspect --format '{{ .NetworkSettings.IPAddress }}' art_apache_https_docker
 
 __Note__
 This assumes a file named local.sh that contains something like:

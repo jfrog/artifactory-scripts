@@ -1,7 +1,7 @@
-Minimal Apache HTTPD SSL High Availability Configuration
+HAProxy SSL High Availability Configuration
 ========================================================
 
-This is a minimal high availability SSL configuration for apache httpd.  It assumes artifactory and httpd are running
+This is a minimal high availability SSL configuration for the HAProxy.  It assumes artifactory and haproxy are running
 on the same machine.
 You can use artifactory.conf as a starting point for your installation.
 

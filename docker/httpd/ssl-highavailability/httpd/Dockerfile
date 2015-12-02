@@ -12,7 +12,8 @@ RUN apt-get update && apt-get install -y apache2 \
     && a2enmod proxy \
     && a2enmod proxy_balancer \
     && a2enmod proxy_http \
-    && a2enmod ssl
+    && a2enmod ssl \
+    || true
 
 COPY artifactory.conf /etc/apache2/sites-available/
 RUN a2ensite artifactory

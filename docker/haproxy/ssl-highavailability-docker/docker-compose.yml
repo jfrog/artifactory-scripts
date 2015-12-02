@@ -1,0 +1,33 @@
+artifactory:
+  build: artifactory
+  links:
+    - mysql
+    - nfs
+  privileged: true
+  volumes:
+    - ~/license:/license:ro
+    - /etc/opt/jfrog/artifactory
+    - /var/opt/jfrog/artifactory/data
+    - /var/opt/jfrog/artifactory/logs
+
+haproxy:
+  build: haproxy
+  ports:
+    - "80:80"
+    - "443:443"
+  links:
+    - artifactory
+
+nfs:
+  build: nfs
+  privileged: true
+  volumes:
+    - /srv
+
+mysql:
+  image: mysql
+  environment:
+    - MYSQL_ROOT_PASSWORD=password
+    - MYSQL_DATABASE=artdb
+    - MYSQL_USER=artifactory
+    - MYSQL_PASSWORD=password

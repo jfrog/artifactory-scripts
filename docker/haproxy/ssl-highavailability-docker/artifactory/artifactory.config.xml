@@ -1,382 +1,181 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<config xmlns="http://artifactory.jfrog.org/xsd/1.6.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.jfrog.org/xsd/artifactory-v1_6_4.xsd">
-    <offlineMode>false</offlineMode>
-    <helpLinksEnabled>true</helpLinksEnabled>
-    <fileUploadMaxSizeMb>100</fileUploadMaxSizeMb>
-    <dateFormat>dd-MM-yy HH:mm:ss z</dateFormat>
-    <addons>
-        <showAddonsInfo>true</showAddonsInfo>
-        <showAddonsInfoCookie>1449015586102</showAddonsInfoCookie>
-    </addons>
+<!-- // @formatter:off -->
+
+<!--
+  ~ Artifactory is a binaries repository manager.
+  ~ Copyright (C) 2014 JFrog Ltd.
+  ~
+  ~ Artifactory is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Lesser General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ Artifactory is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with Artifactory.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<config xmlns="http://artifactory.jfrog.org/xsd/1.6.3"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://artifactory.jfrog.org/xsd/1.6.3 http://www.jfrog.org/xsd/artifactory-v1_6_3.xsd">
+
+    <!--
+        enable/disable anonymous downloads
+        -->
     <security>
         <anonAccessEnabled>true</anonAccessEnabled>
         <anonAccessToBuildInfosDisabled>false</anonAccessToBuildInfosDisabled>
-        <hideUnauthorizedResources>false</hideUnauthorizedResources>
-        <passwordSettings>
-            <encryptionPolicy>supported</encryptionPolicy>
-        </passwordSettings>
-        <ldapSettings/>
-        <ldapGroupSettings/>
     </security>
     <backups>
         <backup>
             <key>backup-daily</key>
-            <enabled>true</enabled>
+            <!-- backup Monday to Friday at 2:00 AM -->
             <cronExp>0 0 2 ? * MON-FRI</cronExp>
+            <!-- Always backup to a "current" dir (incremental backups) -->
             <retentionPeriodHours>0</retentionPeriodHours>
-            <createArchive>false</createArchive>
+            <!-- exclude certain repositories from being backed up -->
             <excludedRepositories>
                 <repositoryRef>jcenter</repositoryRef>
             </excludedRepositories>
-            <sendMailOnError>true</sendMailOnError>
-            <excludeBuilds>false</excludeBuilds>
-            <excludeNewRepositories>false</excludeNewRepositories>
         </backup>
         <backup>
             <key>backup-weekly</key>
             <enabled>false</enabled>
+            <!-- backup on Saturday at 2:00 AM -->
             <cronExp>0 0 2 ? * SAT</cronExp>
+            <!-- keep backups for 2 weeks. -->
             <retentionPeriodHours>336</retentionPeriodHours>
-            <createArchive>false</createArchive>
+            <!-- exclude certain repositories from being backed up -->
             <excludedRepositories>
                 <repositoryRef>jcenter</repositoryRef>
             </excludedRepositories>
-            <sendMailOnError>true</sendMailOnError>
-            <excludeBuilds>false</excludeBuilds>
-            <excludeNewRepositories>false</excludeNewRepositories>
         </backup>
     </backups>
+
+    <!-- The interval at which to activate the maven indexer. -->
     <indexer>
-        <enabled>false</enabled>
+        <!-- By Default index once a day at 05:23AM -->
         <cronExp>0 23 5 * * ?</cronExp>
     </indexer>
+
     <localRepositories>
-        <localRepository>
-            <key>docker-dev-local</key>
-            <type>docker</type>
-            <includesPattern>**/*</includesPattern>
-            <repoLayoutRef>maven-2-default</repoLayoutRef>
-            <dockerApiVersion>V1</dockerApiVersion>
-            <forceDockerAuthentication>false</forceDockerAuthentication>
-            <forceNugetAuthentication>false</forceNugetAuthentication>
-            <blackedOut>false</blackedOut>
-            <handleReleases>true</handleReleases>
-            <handleSnapshots>true</handleSnapshots>
-            <maxUniqueSnapshots>0</maxUniqueSnapshots>
-            <suppressPomConsistencyChecks>true</suppressPomConsistencyChecks>
-            <propertySets/>
-            <archiveBrowsingEnabled>false</archiveBrowsingEnabled>
-            <snapshotVersionBehavior>unique</snapshotVersionBehavior>
-            <localRepoChecksumPolicyType>client-checksums</localRepoChecksumPolicyType>
-            <calculateYumMetadata>false</calculateYumMetadata>
-            <yumRootDepth>0</yumRootDepth>
-            <debianTrivialLayout>false</debianTrivialLayout>
-        </localRepository>
-        <localRepository>
-            <key>docker-dev-local2</key>
-            <type>docker</type>
-            <includesPattern>**/*</includesPattern>
-            <repoLayoutRef>maven-2-default</repoLayoutRef>
-            <dockerApiVersion>V2</dockerApiVersion>
-            <forceDockerAuthentication>true</forceDockerAuthentication>
-            <forceNugetAuthentication>false</forceNugetAuthentication>
-            <blackedOut>false</blackedOut>
-            <handleReleases>true</handleReleases>
-            <handleSnapshots>true</handleSnapshots>
-            <maxUniqueSnapshots>0</maxUniqueSnapshots>
-            <suppressPomConsistencyChecks>true</suppressPomConsistencyChecks>
-            <propertySets/>
-            <archiveBrowsingEnabled>false</archiveBrowsingEnabled>
-            <snapshotVersionBehavior>unique</snapshotVersionBehavior>
-            <localRepoChecksumPolicyType>client-checksums</localRepoChecksumPolicyType>
-            <calculateYumMetadata>false</calculateYumMetadata>
-            <yumRootDepth>0</yumRootDepth>
-            <debianTrivialLayout>false</debianTrivialLayout>
-        </localRepository>
-        <localRepository>
-            <key>docker-prod-local</key>
-            <type>docker</type>
-            <includesPattern>**/*</includesPattern>
-            <repoLayoutRef>maven-2-default</repoLayoutRef>
-            <dockerApiVersion>V1</dockerApiVersion>
-            <forceDockerAuthentication>false</forceDockerAuthentication>
-            <forceNugetAuthentication>false</forceNugetAuthentication>
-            <blackedOut>false</blackedOut>
-            <handleReleases>true</handleReleases>
-            <handleSnapshots>true</handleSnapshots>
-            <maxUniqueSnapshots>0</maxUniqueSnapshots>
-            <suppressPomConsistencyChecks>true</suppressPomConsistencyChecks>
-            <propertySets/>
-            <archiveBrowsingEnabled>false</archiveBrowsingEnabled>
-            <snapshotVersionBehavior>unique</snapshotVersionBehavior>
-            <localRepoChecksumPolicyType>client-checksums</localRepoChecksumPolicyType>
-            <calculateYumMetadata>false</calculateYumMetadata>
-            <yumRootDepth>0</yumRootDepth>
-            <debianTrivialLayout>false</debianTrivialLayout>
-        </localRepository>
-        <localRepository>
-            <key>docker-prod-local2</key>
-            <type>docker</type>
-            <includesPattern>**/*</includesPattern>
-            <repoLayoutRef>maven-2-default</repoLayoutRef>
-            <dockerApiVersion>V2</dockerApiVersion>
-            <forceDockerAuthentication>true</forceDockerAuthentication>
-            <forceNugetAuthentication>false</forceNugetAuthentication>
-            <blackedOut>false</blackedOut>
-            <handleReleases>true</handleReleases>
-            <handleSnapshots>true</handleSnapshots>
-            <maxUniqueSnapshots>0</maxUniqueSnapshots>
-            <suppressPomConsistencyChecks>true</suppressPomConsistencyChecks>
-            <propertySets/>
-            <archiveBrowsingEnabled>false</archiveBrowsingEnabled>
-            <snapshotVersionBehavior>unique</snapshotVersionBehavior>
-            <localRepoChecksumPolicyType>client-checksums</localRepoChecksumPolicyType>
-            <calculateYumMetadata>false</calculateYumMetadata>
-            <yumRootDepth>0</yumRootDepth>
-            <debianTrivialLayout>false</debianTrivialLayout>
-        </localRepository>
-        <localRepository>
-            <key>ext-release-local</key>
-            <type>maven</type>
-            <includesPattern>**/*</includesPattern>
-            <repoLayoutRef>maven-2-default</repoLayoutRef>
-            <dockerApiVersion>V1</dockerApiVersion>
-            <forceDockerAuthentication>false</forceDockerAuthentication>
-            <forceNugetAuthentication>false</forceNugetAuthentication>
-            <blackedOut>false</blackedOut>
-            <handleReleases>true</handleReleases>
-            <handleSnapshots>false</handleSnapshots>
-            <maxUniqueSnapshots>0</maxUniqueSnapshots>
-            <suppressPomConsistencyChecks>true</suppressPomConsistencyChecks>
-            <propertySets/>
-            <archiveBrowsingEnabled>false</archiveBrowsingEnabled>
-            <snapshotVersionBehavior>unique</snapshotVersionBehavior>
-            <localRepoChecksumPolicyType>client-checksums</localRepoChecksumPolicyType>
-            <calculateYumMetadata>false</calculateYumMetadata>
-            <yumRootDepth>0</yumRootDepth>
-            <debianTrivialLayout>false</debianTrivialLayout>
-        </localRepository>
-        <localRepository>
-            <key>ext-snapshot-local</key>
-            <type>maven</type>
-            <includesPattern>**/*</includesPattern>
-            <repoLayoutRef>maven-2-default</repoLayoutRef>
-            <dockerApiVersion>V1</dockerApiVersion>
-            <forceDockerAuthentication>false</forceDockerAuthentication>
-            <forceNugetAuthentication>false</forceNugetAuthentication>
-            <blackedOut>false</blackedOut>
-            <handleReleases>false</handleReleases>
-            <handleSnapshots>true</handleSnapshots>
-            <maxUniqueSnapshots>0</maxUniqueSnapshots>
-            <suppressPomConsistencyChecks>true</suppressPomConsistencyChecks>
-            <propertySets/>
-            <archiveBrowsingEnabled>false</archiveBrowsingEnabled>
-            <snapshotVersionBehavior>unique</snapshotVersionBehavior>
-            <localRepoChecksumPolicyType>client-checksums</localRepoChecksumPolicyType>
-            <calculateYumMetadata>false</calculateYumMetadata>
-            <yumRootDepth>0</yumRootDepth>
-            <debianTrivialLayout>false</debianTrivialLayout>
-        </localRepository>
         <localRepository>
             <key>libs-release-local</key>
             <type>maven</type>
-            <includesPattern>**/*</includesPattern>
             <repoLayoutRef>maven-2-default</repoLayoutRef>
-            <dockerApiVersion>V1</dockerApiVersion>
-            <forceDockerAuthentication>false</forceDockerAuthentication>
-            <forceNugetAuthentication>false</forceNugetAuthentication>
-            <blackedOut>false</blackedOut>
             <handleReleases>true</handleReleases>
             <handleSnapshots>false</handleSnapshots>
-            <maxUniqueSnapshots>0</maxUniqueSnapshots>
-            <suppressPomConsistencyChecks>true</suppressPomConsistencyChecks>
-            <propertySets/>
-            <archiveBrowsingEnabled>false</archiveBrowsingEnabled>
-            <snapshotVersionBehavior>unique</snapshotVersionBehavior>
-            <localRepoChecksumPolicyType>client-checksums</localRepoChecksumPolicyType>
-            <calculateYumMetadata>false</calculateYumMetadata>
-            <yumRootDepth>0</yumRootDepth>
-            <debianTrivialLayout>false</debianTrivialLayout>
         </localRepository>
         <localRepository>
             <key>libs-snapshot-local</key>
             <type>maven</type>
-            <includesPattern>**/*</includesPattern>
             <repoLayoutRef>maven-2-default</repoLayoutRef>
-            <dockerApiVersion>V1</dockerApiVersion>
-            <forceDockerAuthentication>false</forceDockerAuthentication>
-            <forceNugetAuthentication>false</forceNugetAuthentication>
-            <blackedOut>false</blackedOut>
             <handleReleases>false</handleReleases>
             <handleSnapshots>true</handleSnapshots>
-            <maxUniqueSnapshots>0</maxUniqueSnapshots>
-            <suppressPomConsistencyChecks>true</suppressPomConsistencyChecks>
-            <propertySets/>
-            <archiveBrowsingEnabled>false</archiveBrowsingEnabled>
-            <snapshotVersionBehavior>unique</snapshotVersionBehavior>
-            <localRepoChecksumPolicyType>client-checksums</localRepoChecksumPolicyType>
-            <calculateYumMetadata>false</calculateYumMetadata>
-            <yumRootDepth>0</yumRootDepth>
-            <debianTrivialLayout>false</debianTrivialLayout>
         </localRepository>
         <localRepository>
             <key>plugins-release-local</key>
             <type>maven</type>
-            <includesPattern>**/*</includesPattern>
             <repoLayoutRef>maven-2-default</repoLayoutRef>
-            <dockerApiVersion>V1</dockerApiVersion>
-            <forceDockerAuthentication>false</forceDockerAuthentication>
-            <forceNugetAuthentication>false</forceNugetAuthentication>
-            <blackedOut>false</blackedOut>
             <handleReleases>true</handleReleases>
             <handleSnapshots>false</handleSnapshots>
-            <maxUniqueSnapshots>0</maxUniqueSnapshots>
-            <suppressPomConsistencyChecks>true</suppressPomConsistencyChecks>
-            <propertySets/>
-            <archiveBrowsingEnabled>false</archiveBrowsingEnabled>
-            <snapshotVersionBehavior>unique</snapshotVersionBehavior>
-            <localRepoChecksumPolicyType>client-checksums</localRepoChecksumPolicyType>
-            <calculateYumMetadata>false</calculateYumMetadata>
-            <yumRootDepth>0</yumRootDepth>
-            <debianTrivialLayout>false</debianTrivialLayout>
         </localRepository>
         <localRepository>
             <key>plugins-snapshot-local</key>
             <type>maven</type>
-            <includesPattern>**/*</includesPattern>
             <repoLayoutRef>maven-2-default</repoLayoutRef>
-            <dockerApiVersion>V1</dockerApiVersion>
-            <forceDockerAuthentication>false</forceDockerAuthentication>
-            <forceNugetAuthentication>false</forceNugetAuthentication>
-            <blackedOut>false</blackedOut>
             <handleReleases>false</handleReleases>
             <handleSnapshots>true</handleSnapshots>
-            <maxUniqueSnapshots>0</maxUniqueSnapshots>
-            <suppressPomConsistencyChecks>true</suppressPomConsistencyChecks>
-            <propertySets/>
-            <archiveBrowsingEnabled>false</archiveBrowsingEnabled>
-            <snapshotVersionBehavior>unique</snapshotVersionBehavior>
-            <localRepoChecksumPolicyType>client-checksums</localRepoChecksumPolicyType>
-            <calculateYumMetadata>false</calculateYumMetadata>
-            <yumRootDepth>0</yumRootDepth>
-            <debianTrivialLayout>false</debianTrivialLayout>
+        </localRepository>
+        <localRepository>
+            <key>ext-release-local</key>
+            <type>maven</type>
+            <repoLayoutRef>maven-2-default</repoLayoutRef>
+            <handleReleases>true</handleReleases>
+            <handleSnapshots>false</handleSnapshots>
+        </localRepository>
+        <localRepository>
+            <key>ext-snapshot-local</key>
+            <type>maven</type>
+            <repoLayoutRef>maven-2-default</repoLayoutRef>
+            <handleReleases>false</handleReleases>
+            <handleSnapshots>true</handleSnapshots>
+        </localRepository>
+        <localRepository>
+            <key>docker-dev-local</key>
+            <type>docker</type>
+            <repoLayoutRef>maven-2-default</repoLayoutRef>
+            <dockerApiVersion>V1</dockerApiVersion>
+            <handleReleases>true</handleReleases>
+            <handleSnapshots>true</handleSnapshots>
+        </localRepository>
+        <localRepository>
+            <key>docker-prod-local</key>
+            <type>docker</type>
+            <repoLayoutRef>maven-2-default</repoLayoutRef>
+            <dockerApiVersion>V1</dockerApiVersion>
+            <handleReleases>true</handleReleases>
+            <handleSnapshots>true</handleSnapshots>
+        </localRepository>
+        <localRepository>
+            <key>docker-dev-local2</key>
+            <type>docker</type>
+            <repoLayoutRef>maven-2-default</repoLayoutRef>
+            <dockerApiVersion>V2</dockerApiVersion>
+            <forceDockerAuthentication>true</forceDockerAuthentication>
+            <handleReleases>true</handleReleases>
+            <handleSnapshots>true</handleSnapshots>
+        </localRepository>
+        <localRepository>
+            <key>docker-prod-local2</key>
+            <type>docker</type>
+            <repoLayoutRef>maven-2-default</repoLayoutRef>
+            <dockerApiVersion>V2</dockerApiVersion>
+            <forceDockerAuthentication>true</forceDockerAuthentication>
+            <handleReleases>true</handleReleases>
+            <handleSnapshots>true</handleSnapshots>
         </localRepository>
     </localRepositories>
+
     <remoteRepositories>
         <remoteRepository>
             <key>docker-remote</key>
             <type>docker</type>
-            <includesPattern>**/*</includesPattern>
             <repoLayoutRef>maven-2-default</repoLayoutRef>
             <dockerApiVersion>V1</dockerApiVersion>
-            <forceDockerAuthentication>false</forceDockerAuthentication>
-            <forceNugetAuthentication>false</forceNugetAuthentication>
-            <blackedOut>false</blackedOut>
             <handleReleases>true</handleReleases>
             <handleSnapshots>true</handleSnapshots>
-            <maxUniqueSnapshots>0</maxUniqueSnapshots>
-            <suppressPomConsistencyChecks>true</suppressPomConsistencyChecks>
-            <propertySets/>
-            <archiveBrowsingEnabled>false</archiveBrowsingEnabled>
             <url>https://registry-1.docker.io</url>
-            <offline>false</offline>
-            <hardFail>false</hardFail>
-            <storeArtifactsLocally>true</storeArtifactsLocally>
-            <fetchJarsEagerly>false</fetchJarsEagerly>
-            <fetchSourcesEagerly>false</fetchSourcesEagerly>
-            <retrievalCachePeriodSecs>600</retrievalCachePeriodSecs>
-            <assumedOfflinePeriodSecs>300</assumedOfflinePeriodSecs>
-            <missedRetrievalCachePeriodSecs>1800</missedRetrievalCachePeriodSecs>
-            <remoteRepoChecksumPolicyType>generate-if-absent</remoteRepoChecksumPolicyType>
-            <unusedArtifactsCleanupPeriodHours>0</unusedArtifactsCleanupPeriodHours>
-            <shareConfiguration>false</shareConfiguration>
-            <synchronizeProperties>false</synchronizeProperties>
-            <listRemoteFolderItems>true</listRemoteFolderItems>
-            <rejectInvalidJars>false</rejectInvalidJars>
-            <allowAnyHostAuth>false</allowAnyHostAuth>
-            <socketTimeoutMillis>15000</socketTimeoutMillis>
-            <enableCookieManagement>false</enableCookieManagement>
             <enableTokenAuthentication>true</enableTokenAuthentication>
-        </remoteRepository>
-        <remoteRepository>
-            <key>jcenter</key>
-            <type>maven</type>
-            <includesPattern>**/*</includesPattern>
-            <repoLayoutRef>maven-2-default</repoLayoutRef>
-            <dockerApiVersion>V1</dockerApiVersion>
-            <forceDockerAuthentication>false</forceDockerAuthentication>
-            <forceNugetAuthentication>false</forceNugetAuthentication>
-            <blackedOut>false</blackedOut>
-            <handleReleases>true</handleReleases>
-            <handleSnapshots>false</handleSnapshots>
-            <maxUniqueSnapshots>0</maxUniqueSnapshots>
-            <suppressPomConsistencyChecks>true</suppressPomConsistencyChecks>
-            <propertySets/>
-            <archiveBrowsingEnabled>false</archiveBrowsingEnabled>
-            <url>http://jcenter.bintray.com</url>
-            <offline>false</offline>
-            <hardFail>false</hardFail>
-            <storeArtifactsLocally>true</storeArtifactsLocally>
-            <fetchJarsEagerly>false</fetchJarsEagerly>
-            <fetchSourcesEagerly>false</fetchSourcesEagerly>
-            <retrievalCachePeriodSecs>600</retrievalCachePeriodSecs>
-            <assumedOfflinePeriodSecs>300</assumedOfflinePeriodSecs>
-            <missedRetrievalCachePeriodSecs>1800</missedRetrievalCachePeriodSecs>
-            <remoteRepoChecksumPolicyType>generate-if-absent</remoteRepoChecksumPolicyType>
-            <unusedArtifactsCleanupPeriodHours>0</unusedArtifactsCleanupPeriodHours>
-            <shareConfiguration>false</shareConfiguration>
-            <synchronizeProperties>false</synchronizeProperties>
-            <listRemoteFolderItems>true</listRemoteFolderItems>
-            <rejectInvalidJars>false</rejectInvalidJars>
-            <allowAnyHostAuth>false</allowAnyHostAuth>
-            <socketTimeoutMillis>15000</socketTimeoutMillis>
-            <enableCookieManagement>false</enableCookieManagement>
-            <enableTokenAuthentication>false</enableTokenAuthentication>
         </remoteRepository>
         <remoteRepository>
             <key>jfrog-docker-registry</key>
             <type>docker</type>
-            <includesPattern>**/*</includesPattern>
             <repoLayoutRef>maven-2-default</repoLayoutRef>
             <dockerApiVersion>V1</dockerApiVersion>
-            <forceDockerAuthentication>false</forceDockerAuthentication>
-            <forceNugetAuthentication>false</forceNugetAuthentication>
-            <blackedOut>false</blackedOut>
             <handleReleases>true</handleReleases>
             <handleSnapshots>true</handleSnapshots>
-            <maxUniqueSnapshots>0</maxUniqueSnapshots>
-            <suppressPomConsistencyChecks>true</suppressPomConsistencyChecks>
-            <propertySets/>
-            <archiveBrowsingEnabled>false</archiveBrowsingEnabled>
             <url>https://jfrog-docker-reg2.bintray.io</url>
-            <offline>false</offline>
-            <hardFail>false</hardFail>
-            <storeArtifactsLocally>true</storeArtifactsLocally>
-            <fetchJarsEagerly>false</fetchJarsEagerly>
-            <fetchSourcesEagerly>false</fetchSourcesEagerly>
-            <retrievalCachePeriodSecs>600</retrievalCachePeriodSecs>
-            <assumedOfflinePeriodSecs>300</assumedOfflinePeriodSecs>
-            <missedRetrievalCachePeriodSecs>1800</missedRetrievalCachePeriodSecs>
-            <remoteRepoChecksumPolicyType>generate-if-absent</remoteRepoChecksumPolicyType>
-            <unusedArtifactsCleanupPeriodHours>0</unusedArtifactsCleanupPeriodHours>
-            <shareConfiguration>false</shareConfiguration>
-            <synchronizeProperties>false</synchronizeProperties>
-            <listRemoteFolderItems>true</listRemoteFolderItems>
-            <rejectInvalidJars>false</rejectInvalidJars>
-            <allowAnyHostAuth>false</allowAnyHostAuth>
-            <socketTimeoutMillis>15000</socketTimeoutMillis>
-            <enableCookieManagement>false</enableCookieManagement>
             <enableTokenAuthentication>false</enableTokenAuthentication>
         </remoteRepository>
+        <remoteRepository>
+            <key>jcenter</key>
+            <type>maven</type>
+            <repoLayoutRef>maven-2-default</repoLayoutRef>
+            <handleReleases>true</handleReleases>
+            <handleSnapshots>false</handleSnapshots>
+            <url>http://jcenter.bintray.com</url>
+        </remoteRepository>
     </remoteRepositories>
+
     <virtualRepositories>
         <virtualRepository>
             <key>docker-virtual</key>
             <type>docker</type>
-            <includesPattern>**/*</includesPattern>
-            <dockerApiVersion>V1</dockerApiVersion>
             <forceDockerAuthentication>true</forceDockerAuthentication>
-            <forceNugetAuthentication>false</forceNugetAuthentication>
             <artifactoryRequestsCanRetrieveRemoteArtifacts>true</artifactoryRequestsCanRetrieveRemoteArtifacts>
             <repositories>
                 <repositoryRef>docker-dev-local2</repositoryRef>
@@ -384,81 +183,55 @@
                 <repositoryRef>docker-remote</repositoryRef>
                 <repositoryRef>jfrog-docker-registry</repositoryRef>
             </repositories>
-            <pomRepositoryReferencesCleanupPolicy>discard_active_reference</pomRepositoryReferencesCleanupPolicy>
             <defaultDeploymentRepo>docker-dev-local2</defaultDeploymentRepo>
+        </virtualRepository>
+        <!-- This repository will be available at the url:
+        http://<host>:<port>/artifactory/snapshots-only/
+        (note the trailing slash!)
+        -->
+        <virtualRepository>
+            <key>remote-repos</key>
+            <type>maven</type>
+            <artifactoryRequestsCanRetrieveRemoteArtifacts>true</artifactoryRequestsCanRetrieveRemoteArtifacts>
+            <repositories>
+                <repositoryRef>jcenter</repositoryRef>
+            </repositories>
         </virtualRepository>
         <virtualRepository>
             <key>libs-release</key>
             <type>maven</type>
-            <includesPattern>**/*</includesPattern>
-            <dockerApiVersion>V1</dockerApiVersion>
-            <forceDockerAuthentication>false</forceDockerAuthentication>
-            <forceNugetAuthentication>false</forceNugetAuthentication>
-            <artifactoryRequestsCanRetrieveRemoteArtifacts>false</artifactoryRequestsCanRetrieveRemoteArtifacts>
             <repositories>
                 <repositoryRef>libs-release-local</repositoryRef>
                 <repositoryRef>ext-release-local</repositoryRef>
                 <repositoryRef>remote-repos</repositoryRef>
             </repositories>
-            <pomRepositoryReferencesCleanupPolicy>discard_active_reference</pomRepositoryReferencesCleanupPolicy>
-        </virtualRepository>
-        <virtualRepository>
-            <key>libs-snapshot</key>
-            <type>maven</type>
-            <includesPattern>**/*</includesPattern>
-            <dockerApiVersion>V1</dockerApiVersion>
-            <forceDockerAuthentication>false</forceDockerAuthentication>
-            <forceNugetAuthentication>false</forceNugetAuthentication>
-            <artifactoryRequestsCanRetrieveRemoteArtifacts>false</artifactoryRequestsCanRetrieveRemoteArtifacts>
-            <repositories>
-                <repositoryRef>libs-snapshot-local</repositoryRef>
-                <repositoryRef>ext-snapshot-local</repositoryRef>
-                <repositoryRef>remote-repos</repositoryRef>
-            </repositories>
-            <pomRepositoryReferencesCleanupPolicy>discard_active_reference</pomRepositoryReferencesCleanupPolicy>
         </virtualRepository>
         <virtualRepository>
             <key>plugins-release</key>
             <type>maven</type>
-            <includesPattern>**/*</includesPattern>
-            <dockerApiVersion>V1</dockerApiVersion>
-            <forceDockerAuthentication>false</forceDockerAuthentication>
-            <forceNugetAuthentication>false</forceNugetAuthentication>
-            <artifactoryRequestsCanRetrieveRemoteArtifacts>false</artifactoryRequestsCanRetrieveRemoteArtifacts>
             <repositories>
                 <repositoryRef>plugins-release-local</repositoryRef>
                 <repositoryRef>ext-release-local</repositoryRef>
                 <repositoryRef>remote-repos</repositoryRef>
             </repositories>
-            <pomRepositoryReferencesCleanupPolicy>discard_active_reference</pomRepositoryReferencesCleanupPolicy>
+        </virtualRepository>
+        <virtualRepository>
+            <key>libs-snapshot</key>
+            <type>maven</type>
+            <repositories>
+                <repositoryRef>libs-snapshot-local</repositoryRef>
+                <repositoryRef>ext-snapshot-local</repositoryRef>
+                <repositoryRef>remote-repos</repositoryRef>
+            </repositories>
         </virtualRepository>
         <virtualRepository>
             <key>plugins-snapshot</key>
             <type>maven</type>
-            <includesPattern>**/*</includesPattern>
-            <dockerApiVersion>V1</dockerApiVersion>
-            <forceDockerAuthentication>false</forceDockerAuthentication>
-            <forceNugetAuthentication>false</forceNugetAuthentication>
-            <artifactoryRequestsCanRetrieveRemoteArtifacts>false</artifactoryRequestsCanRetrieveRemoteArtifacts>
             <repositories>
                 <repositoryRef>plugins-snapshot-local</repositoryRef>
                 <repositoryRef>ext-snapshot-local</repositoryRef>
                 <repositoryRef>remote-repos</repositoryRef>
             </repositories>
-            <pomRepositoryReferencesCleanupPolicy>discard_active_reference</pomRepositoryReferencesCleanupPolicy>
-        </virtualRepository>
-        <virtualRepository>
-            <key>remote-repos</key>
-            <type>maven</type>
-            <includesPattern>**/*</includesPattern>
-            <dockerApiVersion>V1</dockerApiVersion>
-            <forceDockerAuthentication>false</forceDockerAuthentication>
-            <forceNugetAuthentication>false</forceNugetAuthentication>
-            <artifactoryRequestsCanRetrieveRemoteArtifacts>true</artifactoryRequestsCanRetrieveRemoteArtifacts>
-            <repositories>
-                <repositoryRef>jcenter</repositoryRef>
-            </repositories>
-            <pomRepositoryReferencesCleanupPolicy>discard_active_reference</pomRepositoryReferencesCleanupPolicy>
         </virtualRepository>
     </virtualRepositories>
     <proxies/>
@@ -882,32 +655,23 @@
             <fileIntegrationRevisionRegExp>.+</fileIntegrationRevisionRegExp>
         </repoLayout>
     </repoLayouts>
-    <remoteReplications/>
-    <localReplications/>
     <gcConfig>
         <cronExp>0 0 /4 * * ?</cronExp>
     </gcConfig>
     <cleanupConfig>
+        <!-- by default cleanup once a day at 05:12AM -->
         <cronExp>0 12 5 * * ?</cronExp>
     </cleanupConfig>
     <virtualCacheCleanupConfig>
+        <!-- by default cleanup once a day at 05:00AM -->
         <cronExp>0 12 0 * * ?</cronExp>
     </virtualCacheCleanupConfig>
-    <quotaConfig>
-        <enabled>false</enabled>
-        <diskSpaceLimitPercentage>0</diskSpaceLimitPercentage>
-        <diskSpaceWarningPercentage>0</diskSpaceWarningPercentage>
-    </quotaConfig>
+    <quotaConfig/>
     <externalProviders/>
-    <systemMessageConfig>
-        <enabled>false</enabled>
-        <titleColor>#429f46</titleColor>
-        <showOnAllPages>false</showOnAllPages>
-    </systemMessageConfig>
+    <systemMessageConfig/>
     <folderDownloadConfig>
         <enabled>false</enabled>
         <maxDownloadSizeMb>0</maxDownloadSizeMb>
-        <maxFiles>5000</maxFiles>
         <maxConcurrentRequests>0</maxConcurrentRequests>
     </folderDownloadConfig>
 </config>

@@ -1,0 +1,54 @@
+artifactory_1:
+  container_name: artifactory_1
+  build: artifactory
+  links:
+    - mysql
+    - nfs
+  privileged: true
+  volumes:
+# IMPORTANT: the environment variable below is based on the environment of the running docker-compose
+# In other words if you use the docker-compose container rather than running it as yourself it won't work.
+    - "${HOME}/license/artifactory-H1.lic:/etc/opt/jfrog/artifactory/artifactory.lic:ro"
+    - "/etc/opt/jfrog/artifactory"
+    - "/var/opt/jfrog/artifactory/data"
+    - "/var/opt/jfrog/artifactory/logs"
+
+artifactory_2:
+  container_name: artifactory_2
+  build: artifactory
+  links:
+    - mysql
+    - nfs
+  privileged: true
+  volumes:
+    - "${HOME}/license/artifactory-H2.lic:/etc/opt/jfrog/artifactory/artifactory.lic:ro"
+    - "/etc/opt/jfrog/artifactory"
+    - "/var/opt/jfrog/artifactory/data"
+    - "/var/opt/jfrog/artifactory/logs"
+
+nginx:
+  build: nginx
+  ports:
+    - "80:80"
+    - "8080:8080"
+    - "8081:8081"
+    - "443:443"
+    - "5000-5010:5000-5010"
+
+  links:
+    - artifactory_1
+    - artifactory_2
+
+nfs:
+  build: nfs
+  privileged: true
+  volumes:
+    - /srv
+
+mysql:
+  image: mysql
+  environment:
+    - MYSQL_ROOT_PASSWORD=password
+    - MYSQL_DATABASE=artdb
+    - MYSQL_USER=artifactory
+    - MYSQL_PASSWORD=password

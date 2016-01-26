@@ -16,6 +16,4 @@ COPY artifactory.config.xml /etc/opt/jfrog/artifactory/artifactory.config.xml
 RUN openssl req -nodes -x509 -newkey rsa:4096 -keyout /etc/pki/tls/private/example.key -out /etc/pki/tls/certs/example.pem -days 356 \
     -subj "/C=US/ST=California/L=SantaClara/O=IT/CN=localhost"
 
-COPY server.xml /opt/jfrog/artifactory/tomcat/conf/server.xml
-
 CMD /run.sh

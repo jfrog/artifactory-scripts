@@ -18,6 +18,4 @@ RUN bash /wildcard-ssl.sh localhost
 RUN mv /certs/*.crt /etc/pki/tls/certs/
 RUN mv /certs/*.key /etc/pki/tls/private/
 
-COPY server.xml /opt/jfrog/artifactory/tomcat/conf/server.xml
-
 CMD /run.sh

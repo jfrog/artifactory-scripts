@@ -12,8 +12,6 @@ RUN mv -f mysql-connector* ~artifactory/tomcat/lib
 RUN cp ~artifactory/misc/db/mysql.properties ~artifactory/etc/storage.properties
 RUN sed -i 's/localhost/mysql/' ~artifactory/etc/storage.properties
 
-COPY server.xml /opt/jfrog/artifactory/tomcat/conf/server.xml
-
 EXPOSE 8081 10042
 
 CMD /run.sh

@@ -18,6 +18,4 @@ COPY wildcard-ssl.sh /wildcard-ssl.sh
 RUN bash /wildcard-ssl.sh localhost
 RUN mv /certs /etc/nginx/ssl/
 
-COPY server.xml /opt/jfrog/artifactory/tomcat/conf/server.xml
-
 CMD /run.sh

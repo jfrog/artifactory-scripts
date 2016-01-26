@@ -4,7 +4,7 @@ MAINTAINER Jay Denebeim <jayd@jfrog.com>
 COPY local.sh /tmp
 RUN bash /tmp/local.sh && rm /tmp/local.sh
 
-RUN apt-get update && apt-get install -y apache2 \
+RUN apt-get update ; apt-get install -y apache2 \
     && a2dissite 000-default \
     && a2enmod rewrite \
     && a2enmod headers \

@@ -46,7 +46,7 @@ public List getAqlQueryResult(RESTClient restClient, String query) {
  * Construct the full path form the returned items.
  * If the path is '.' (file is on the root) we ignores it and construct the full path from the repo and the file name only
  */
-public constructPath(HashMap item) {
+public constructPath(Map item) {
     if (item.path.toString().equals(".")) {
         return item.repo + "/" + item.name
     }

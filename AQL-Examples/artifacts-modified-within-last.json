@@ -1,0 +1,2 @@
+items.find({"modified" : {"$last" : "60minutes"}})
+ /* hello */

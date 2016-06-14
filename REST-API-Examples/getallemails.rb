@@ -18,8 +18,10 @@ parsed = JSON.parse(string)
 parsed.map
 emailnum = 0
 
-while 1 < 2 do
-	unless parsed[emailnum].nil? #make sure it's not null
+while true do
+	if parsed[emailnum].nil? #make sure it's not null
+		break
+	else
 		checkmail = parsed[emailnum]["name"] #grabs username
 		url = artifactory + api2 + checkmail #makes REST API call for each username
 		site2 = RestClient::Resource.new(url, user_name, password)
@@ -29,5 +31,5 @@ while 1 < 2 do
 		parsed2.map
 		puts parsed2["email"] #prints email
 		emailnum +=1
-end
+	end
 end

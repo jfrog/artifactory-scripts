@@ -1,6 +1,7 @@
 require "rubygems"
 require "rest_client"
 require "json"
+require "uri"
 
 # Insert the correct url, and an administrator username and password
 artifactory = "http://artifactorydomain.org:8081/artifactory"
@@ -15,7 +16,7 @@ parsed = JSON.parse(response.body)
 parsed["files"].each { |artifact|
   path = artifact["uri"]
   restoreurl = artifactory + "/api/trash/restore" + path + "?to=" + path
-  site = RestClient::Resource.new(restoreurl, user_name, password)
+  site = RestClient::Resource.new(URI.escape(restoreurl), user_name, password)
   begin
     response = site.post(nil)
     puts "[#{response.code}] #{path}"

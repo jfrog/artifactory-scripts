@@ -212,7 +212,13 @@ class PackageTypeWindow(QtGui.QMainWindow):
         # find the repos that are listed to have been modified
         for name in "local", "remote", "virtual":
             types = self.model.getPackTypes(name)
-            for repo in root.iter(ns + name + "Repository"):
+            iterator = None
+            try:
+                iterator = root.iter(ns + name + "Repository")
+            except AttributeError:
+                # depricated in Python 2.7
+                iterator = root.getiterator(ns + name + "Repository")
+            for repo in iterator:
                 key = repo.find(ns + "key")
                 if key == None or key.text not in diff: continue
                 # set the type and layout of each modified repo
@@ -254,14 +260,26 @@ class PackageTypeWindow(QtGui.QMainWindow):
         root = self.repodata.getroot()
         ns = root.tag[:root.tag.index('}') + 1]
         # extract all the layout names from the file
-        for layout in root.iter(ns + "repoLayout"):
+        iterator = None
+        try:
+            iterator = root.iter(ns + "repoLayout")
+        except AttributeError:
+            # depricated in Python 2.7
+            iterator = root.getiterator(ns + "repoLayout")
+        for layout in iterator:
             name = layout.find(ns + "name")
             if name != None: layouts.append(name.text)
         layouts.sort()
         # iterate over all the repositories
         for name in "local", "remote", "virtual":
             types = self.model.getPackTypes(name)
-            for repo in root.iter(ns + name + "Repository"):
+            iterator = None
+            try:
+                iterator = root.iter(ns + name + "Repository")
+            except AttributeError:
+                # depricated in Python 2.7
+                iterator = root.getiterator(ns + name + "Repository")
+            for repo in iterator:
                 # extract the data from each repo entry
                 key = repo.find(ns + "key")
                 ptype = repo.find(ns + "type")

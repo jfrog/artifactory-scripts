@@ -638,11 +638,18 @@ class RepositoryListModel(QtCore.QAbstractItemModel):
     # table setter, also set orig and keys appropriately
     # also send reset signals so the QTreeView updates properly
     def setTable(self, tab):
-        self.beginResetModel()
-        self._table = tab.copy()
-        self.orig = tab.copy()
-        self.keys = tab.keys()
-        self.endResetModel()
+        try:
+            self.beginResetModel()
+            self._table = tab.copy()
+            self.orig = tab.copy()
+            self.keys = tab.keys()
+            self.endResetModel()
+        except AttributeError:
+            # Fix for PyQt < 4.6
+            self._table = tab.copy()
+            self.orig = tab.copy()
+            self.keys = tab.keys()
+            self.reset()
 
     # connect the table property to its getter and setter
     table = property(getTable, setTable)

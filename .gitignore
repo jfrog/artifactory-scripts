@@ -35,3 +35,4 @@ tramp
 
 */*Cache/*
 *.log
+*.csv

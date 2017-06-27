@@ -5,7 +5,7 @@ if [ ! -f $FILE ]; then
 fi
 PREFIX=$2
 
-OUTPUT=$PREFIX-$(head -c 8 $FILE).csv
+OUTPUT=${PREFIX:+${PREFIX}-}$(head -c 8 $FILE).csv
 
 awk '!/0$/' $FILE > $OUTPUT
 if sed --version 

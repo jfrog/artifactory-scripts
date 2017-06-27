@@ -1,16 +1,26 @@
 #!/bin/bash
 FILE=$1
 if [ ! -f $FILE ]; then
-    echo "Correct usage is: requestToUsage.sh request.log"
+    echo "Correct usage is: requestToUsage.sh request.log [optional prefix string]"
 fi
-awk '!/0$/' $FILE > request.csv
+PREFIX=$2
+
+OUTPUT=$PREFIX-$(head -c 8 $FILE).csv
+
+awk '!/0$/' $FILE > $OUTPUT
 if sed --version 
-then sed "s/[|]/,/g" request.csv -i
-else 
+then sed "s/[|]/,/g" $OUTPUT -i
+else
 	echo "Please ignore the above error message from sed, switching to gsed."
-	gsed "s/[|]/,/g" request.csv -i
+	gsed "s/[|]/,/g" $OUTPUT -i
 fi
-echo "Successfully outputted to request.csv"
-echo "0,0,0,0,0,0,0,0,0,0,=SUM(J:J)/(1024^3)" >> request.csv
+echo "Successfully outputted to $OUTPUT"
+if date --version
+then echo 'date'
+else 
+	echo "Please ignore the above error message from date, switching to gdate."
+	echo 'gdate'
+fi
+echo "0,0,0,0,0,0,0,0,0,0,=SUM(J:J)/(1024^3)" >> $OUTPUT
 echo "Added calculation line."
-echo "Open request.csv in excel or a similar spreadsheet program"
+echo "Open $OUTPUT in excel or a similar spreadsheet program"

@@ -1,9 +1,12 @@
 #!/bin/bash
 LOC=$1
-if [ ! -f $LOC ]; then
-    echo "Correct usage is: requestToUsage.sh request.log"
+${LOC:-"."}
+if [ ! -d $LOC ]; then
+    echo "Usage is: ./multiLogParse.sh /path/to/logs/ <OPTIONAL_PREFIX>"
+else
+    echo "Using directory $LOC as LOC"
 fi
 PREFIX=$2
-for i in $LOC; do 
+for i in $LOC/request.*; do
 	./requestToUsage.sh $i $PREFIX
 done

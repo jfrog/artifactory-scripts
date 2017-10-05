@@ -1,4 +1,4 @@
-#!/usr/bin/groovy
+#!/usr/bin/env groovy
 
 @Grab('org.jdom:jdom2:2.0.6')
 

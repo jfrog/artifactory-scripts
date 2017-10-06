@@ -26,14 +26,17 @@ try {
     def rootprops = ['good.prop': 'value', 'bad prop': 'value']
     def l1props = ['good.prop': 'value', 'bad:prop': 'value']
     def l2props = ['good.prop': 'value', 'bad/prop': 'value']
+    def l3props = ['http://bad/prop': 'value', 'ssh://bad/prop': 'value']
     def content = new ByteArrayInputStream('content'.bytes)
     println 'Adding files ...'
     repo.upload('l1file', content).doUpload()
     repo.upload('dir/l2file', content).doUpload()
+    repo.upload('dir/l3file', content).doUpload()
     println 'Adding properties ...'
     repo.folder('.').properties().addProperties(rootprops).doSet()
     repo.file('l1file').properties().addProperties(l1props).doSet()
     repo.file('dir/l2file').properties().addProperties(l2props).doSet()
+    repo.file('dir/l3file').properties().addProperties(l3props).doSet()
 
     println 'Running script ...'
     def output = new StringBuilder()
@@ -47,20 +50,25 @@ try {
         assert log.contains('bad prop')
         assert log.contains('bad:prop')
         assert log.contains('bad/prop')
+        assert log.contains('http://bad/prop')
+        assert log.contains('ssh://bad/prop')
         assert !log.contains('good.prop')
-        assert log.contains('Deleted 3 total properties')
+        assert log.contains('Deleted 5 total properties')
     }
 
     println 'Checking properties ...'
     def getrootprops = repo.folder('.').getProperties('good.prop', 'bad prop')
     def getl1props = repo.file('l1file').getProperties('good.prop', 'bad:prop')
     def getl2props = repo.file('dir/l2file').getProperties('good.prop', 'bad/prop')
+    def getl3props = repo.file('dir/l3file').getProperties('http://bad/prop', 'ssh://bad/prop')
     assert 'good.prop' in getrootprops
     assert 'good.prop' in getl1props
     assert 'good.prop' in getl2props
     assert !('bad prop' in getrootprops)
     assert !('bad:prop' in getl1props)
     assert !('bad/prop' in getl2props)
+    assert !('http://bad/prop' in getl3props)
+    assert !('ssh://bad/prop' in getl3props)
 
     println 'Success'
 } finally {

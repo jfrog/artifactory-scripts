@@ -33,8 +33,37 @@ def dropProperties(url, creds, item, props) {
 
 def getPropertiesList(url, creds, cb) {
     def query = 'items.find({"$and":[{"type":"any"},'
-    query += '{"repo":{"$ne":"auto-trashcan"}}]})'
+    query += '{"repo":{"$ne":"auto-trashcan"}},{"$or":['
+    query += '{"property.key" : {"$match" : "*/*"}},'
+    query += '{"property.key" : {"$match" : "*:*"}},'
+    query += '{"property.key" : {"$match" : "*@*"}},'
+    query += '{"property.key" : {"$match" : "*$*"}},'
+    query += '{"property.key" : {"$match" : "*!*"}},'
+    query += '{"property.key" : {"$match" : "*%*"}},'
+    query += '{"property.key" : {"$match" : "*^*"}},'
+    query += '{"property.key" : {"$match" : "*&*"}},'
+    query += '{"property.key" : {"$match" : "*(*"}},'
+    query += '{"property.key" : {"$match" : "*)*"}},'
+    query += '{"property.key" : {"$match" : "*=*"}},'
+    query += '{"property.key" : {"$match" : "*<*"}},'
+    query += '{"property.key" : {"$match" : "*>*"}},'
+    query += '{"property.key" : {"$match" : "*~*"}},'
+    query += '{"property.key" : {"$match" : "*#*"}},'
+    query += '{"property.key" : {"$match" : "*+*"}},'
+    query += '{"property.key" : {"$match" : "*{*"}},'
+    query += '{"property.key" : {"$match" : "*}*"}},'
+    query += '{"property.key" : {"$match" : "*[*"}},'
+    query += '{"property.key" : {"$match" : "*]*"}},'
+    query += '{"property.key" : {"$match" : "*;*"}},'
+    query += '{"property.key" : {"$match" : "*|*"}},'
+    query += '{"property.key" : {"$match" : "*,*"}},'
+    query += '{"property.key" : {"$match" : "*\'*"}},'
+    query += '{"property.key" : {"$match" : "*`*"}},'
+    query += '{"property.key" : {"$match" : "*\\*"}},'
+    query += '{"property.key" : {"$match" : "* *"}}'
+    query += ']}]})'
     query += '.include("repo","path","name","property")'
+    println query
     def conn = null
     try {
         conn = new URL(url + '/api/search/aql').openConnection()

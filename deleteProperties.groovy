@@ -27,6 +27,6 @@ new File('propertiesToDelete.txt').eachLine { line, nb ->  //Please replace the 
     def restClient = new RESTClient(url)
     restClient.auth.basic 'username', 'password'  // Enter your credentials, can be encrypted password.
     println "Starting to delete property:" + line  
-    def response = restClient.delete(path: "api/storage/"+ repository, params:['properties': line, 'recursive': 1 ]) // Pay attention that currently it will delete the properties recursivlly, if this is not desride delete the proeprty 'recursive'
+    def response = restClient.delete(path: "api/storage/"+ repository, params:['properties': line, 'recursive': 1 ]) // Pay attention that currently it will delete the properties recursivlly, if this is not desired, then delete the proeprty 'recursive'
     println "Property " + line +" was deleted"
 }

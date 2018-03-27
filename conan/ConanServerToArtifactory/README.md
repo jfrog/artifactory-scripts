@@ -1,5 +1,5 @@
-ConanServerToArtifactory/migrate.py
-===================================
+migrate.py
+==========
 
 The purpose of this script is to migrate all the Conan recipes and binary packages from a Conan remote to a different one.
 In particular, can be used to migrate the Conan packages from a conan server to Artifactory.

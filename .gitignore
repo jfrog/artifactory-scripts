@@ -36,3 +36,6 @@ tramp
 */*Cache/*
 *.log
 *.csv
+
+# Pycharm
+.idea

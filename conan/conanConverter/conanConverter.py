@@ -41,18 +41,18 @@ def reqcp(url, user, pasw, pathfrom, pathto):
     return json.load(urllib2.urlopen(req))
 
 def main():
-    if len(sys.argv) != 5:
-        print "Usage: ./conanConverter.py <artifactory url> <username> <password> <repository>"
+    if len(sys.argv) != 6:
+        print("Usage: ./conanConverter.py <artifactory url> <username> <password> <source repository> <destination repository>")
         return
-    url, user, pasw, repo = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
-    aqlresp = reqaql(url, user, pasw, repo)
+    url, user, pasw, repo1, repo2 = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]
+    aqlresp = reqaql(url, user, pasw, repo1)
     for item in aqlresp['results']:
         match = re.match(r'^([^/]+)/(\d+\.\d+\.\d+[^/]*)/([^/]+)$', item['path'])
         if match == None: continue
         newpath = match.group(3) + '/' + match.group(1) + '/' + match.group(2)
-        pathto = '/' + item['repo'] + '/' + newpath + '/' + item['name']
+        pathto = '/' + repo2 + '/' + newpath + '/' + item['name']
         pathfrom = '/' + item['repo'] + '/' + item['path'] + '/' + item['name']
-        print "#### Copying " + pathfrom + " to " + pathto
-        print "     " + json.dumps(reqcp(url, user, pasw, pathfrom, pathto))
+        print("#### Copying " + pathfrom + " to " + pathto)
+        print("     " + json.dumps(reqcp(url, user, pasw, pathfrom, pathto)))
 
 if __name__ == '__main__': main()

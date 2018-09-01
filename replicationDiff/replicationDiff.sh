@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# gives a diff
+
 if [[ $# -lt 18 ]] && [[ $# -ne 0 ]]
 then
 echo

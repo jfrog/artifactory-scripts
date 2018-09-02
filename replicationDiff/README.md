@@ -29,7 +29,7 @@ Here is an example on how to run the script by providing the above parameters as
 
 **If you don't want to provide parameters for the script, then you could just run the script without any of the above options and it will prompt you for all the details of the source Artifactory instance and target Artifactory instance.**
 
-**`NOTE`:**
+**NOTE:**
 ----------
 *After a successful run of the script it will provide you with the count of files sorted according to the file extension that are present in the source repository and are missing in the target repository.* 
 

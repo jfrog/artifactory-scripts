@@ -23,7 +23,7 @@ The script needs nine parameters in order to run it. Below are these parameters
 Here is an example on how to run the script by providing the above parameters as flags
 --------------------------------------------------------------------------------------
 
-`./testreplication_diff.sh -source_adminuser adminuser -target_adminuser adminuser -source_art https://sourceartifactory.server.net/artifactory -target_art https://targetartifactory.server.net/artifactory -source_repo mysourcerepo-local -target_repo mytargetrepo-local -source_password password -target_password password -download_missingfiles yes or no`
+`./replicationDiff.sh -source_adminuser adminuser -target_adminuser adminuser -source_art https://sourceartifactory.server.net/artifactory -target_art https://targetartifactory.server.net/artifactory -source_repo mysourcerepo-local -target_repo mytargetrepo-local -source_password password -target_password password -download_missingfiles yes or no`
 
 *The -download_missingfiles flag can take `yes or no` as a value and when you pass `yes` the script will download all the files that are present in Source repository and missing from the Target repository to a folder 'replication_downloads' in the current working directory*
 

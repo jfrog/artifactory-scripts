@@ -29,8 +29,10 @@ Here is an example on how to run the script by providing the above parameters as
 
 **If you don't want to provide parameters for the script, then you could just run the script without any of the above options and it will prompt you for all the details of the source Artifactory instance and target Artifactory instance.**
 
+**`NOTE`**
+----------
 After a successful run of the script it will provide you with the count of files sorted according to the file extension that are present in the source repository and are missing in the target repository. 
 
-In the current working directory you will find a text file named **"filepaths_uri.txt"** which contains all the artifacts including metadata files that are present in the source repository and missing in the target repository. It will include the entire URL of the source Artifactory and the path to the artifact.
+*In the current working directory you will find a text file named **"filepaths_uri.txt"** which contains all the artifacts including metadata files that are present in the source repository and missing in the target repository. It will include the entire URL of the source Artifactory and the path to the artifact.*
 
-You will also find another text file named **"filepaths_nometadatafiles.txt"** which contains only the artifacts and not metadata files  that are present in the source repository and missing in the target repository. Since metadata files are not necessary as the target repository is responsible for calculating metadata, we have filtered them to only provide the missing artifacts.
+*You will also find another text file named **"filepaths_nometadatafiles.txt"** which contains only the artifacts and not metadata files  that are present in the source repository and missing in the target repository. Since metadata files are not necessary as the target repository is responsible for calculating metadata, we have filtered them to only provide the missing artifacts.*

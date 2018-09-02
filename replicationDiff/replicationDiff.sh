@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# gives a diff
-
 if [[ $# -lt 18 ]] && [[ $# -ne 0 ]]
 then
 echo
@@ -88,39 +86,89 @@ while test $# -gt 0; do
 
 
 status_code=$(curl -u$SOURCEUSER:$SOURCEPASSWORD --write-out %{http_code} --silent --output /dev/null "$SOURCEART/api/storage/$SOURCEREPO/?list&deep=1&listFolders=0&mdTimestamps=1&statsTimestamps=1&includeRootPath=1" -L)
-echo "$status_code olease"
-if [ -z "$status_code" ] ; then
-  echo "Site status changed to $status_code"
+
+if [[ "$status_code" -eq 401 ]] && [[ "$status_code" -ne 200 ]]
+  then
+  echo
+  echo "Request failed with $status_code. Please check the provided username (-source_adminuser) and password (-source_password) for the Source Artifactory" 
+  echo
   exit 0
 fi
 
-#if [[ "$status_code" -eq 401 ]] ; then
-#  echo
-#  echo "Request failed with $status_code. Please check the provided username (-source_adminuser) and password (-source_password) for the Source Artifactory" 
-#  echo
-#  exit 0
-#fi
+if [[ "$status_code" -eq 000 ]] && [[ "$status_code" -ne 200 ]] 
+  then
+  echo
+  echo "Request failed with $status_code. Please check the Source Artifactory URL (-source_art) and make sure its correct"
+  echo
+  exit 0
+fi
 
-#if [[ "$status_code" -eq 000 ]] ; then
-#  echo
-#  echo "Request failed with $status_code. Please check the Source Artifactory URL (-source_art) and make sure its correct"
-#  echo
-#  exit 0
-#fi
+if [[ "$status_code" -eq 404 ]] && [[ "$status_code" -ne 200 ]] 
+  then
+  echo
+  echo "Request failed with $status_code. Please check the Source Artifactory URL (-source_art) and Source Repository (-source_repo) make sure its correct. "
+  echo
+  exit 0
+fi
 
-#if [[ "$status_code" -eq 404 ]] ; then
-#  echo
-#  echo "Request failed with $status_code. Please check the Source Artifactory URL (-source_art) and Source Repository (-source_repo) make sure its correct. "
-#  echo
-#  exit 0
-#fi
+if [[ "$status_code" -eq 400 ]] && [[ "$status_code" -ne 200 ]] 
+  then
+  echo
+  echo "Request failed with $status_code. Please check the Source Artifactory URL (-source_art) and Source Repository (-source_repo) make sure its correct. "
+  echo
+  exit 0
+fi
+
+if [[ "$status_code" -ne 200 ]]
+  then
+  echo
+  echo "Request failed with $status_code. Please check the Source Artifactory URL (-source_art) and Source Repository (-source_repo) make sure its correct."
+  echo
+  exit 0
+fi
 
 status_code=$(curl -u$TARGETUSER:$TARGETPASSWORD --write-out %{http_code} --silent --output /dev/null "$TARGETART/api/storage/$TARGETREPO/?list&deep=1&listFolders=0&mdTimestamps=1&statsTimestamps=1&includeRootPath=1" -L)
 
-if [[ "$status_code" -ne 200 ]] ; then
-  echo "Site status changed to $status_code"
+if [[ "$status_code" -eq 401 ]] && [[ "$status_code" -ne 200 ]]
+  then
+  echo
+  echo "Request failed with $status_code. Please check the provided username (-target_adminuser) and password (-target_password) for the Source Artifactory"
+  echo
   exit 0
 fi
+
+if [[ "$status_code" -eq 000 ]] && [[ "$status_code" -ne 200 ]]
+  then
+  echo
+  echo "Request failed with $status_code. Please check the Target Artifactory URL (-target_art) and make sure its correct"
+  echo
+  exit 0
+fi
+
+if [[ "$status_code" -eq 404 ]] && [[ "$status_code" -ne 200 ]]
+  then
+  echo
+  echo "Request failed with $status_code. Please check the Target Artifactory URL (-target_art) and Target Repository (-target_repo) make sure its correct. "
+  echo
+  exit 0
+fi
+
+if [[ "$status_code" -eq 400 ]] && [[ "$status_code" -ne 200 ]]
+  then
+  echo
+  echo "Request failed with $status_code. Please check the Target Artifactory URL (-target_art) and Target Repository (-target_repo) make sure its correct. "
+  echo
+  exit 0
+fi
+
+if [[ "$status_code" -ne 200 ]]
+  then
+  echo
+  echo "Request failed with $status_code. Please check the Target Artifactory URL (-target_art) and Target Repository (-target_repo) make sure its correct."
+  echo
+  exit 0
+fi
+
 curl -X GET -u$SOURCEUSER:$SOURCEPASSWORD "$SOURCEART/api/storage/$SOURCEREPO/?list&deep=1&listFolders=0&mdTimestamps=1&statsTimestamps=1&includeRootPath=1" -L > source.log
 curl -X GET -u$TARGETUSER:$TARGETPASSWORD "$TARGETART/api/storage/$TARGETREPO/?list&deep=1&listFolders=0&mdTimestamps=1&statsTimestamps=1&includeRootPath=1" -L > target.log
 
@@ -152,7 +200,6 @@ fi
 exit 0
 fi
 
-#else
 if [[ $# -eq 0 ]]
 then
 echo "Enter your source Artifactory URL: "
@@ -173,6 +220,91 @@ echo "Enter admin username for target Artifactory: "
 read target_username
 echo "Password for target Artifactory: "
 read -s target_password
+
+status_code=$(curl -u$source_username:$source_password --write-out %{http_code} --silent --output /dev/null "$SOURCE_ART/api/storage/$Source_repo_name/?list&deep=1&listFolders=0&mdTimestamps=1&statsTimestamps=1&includeRootPath=1" -L)
+
+if [[ "$status_code" -eq 401 ]] && [[ "$status_code" -ne 200 ]]
+  then
+  echo
+  echo "Request failed with $status_code. Please check the provided admin username and password for the Source Artifactory"
+  echo
+  exit 0
+fi
+
+if [[ "$status_code" -eq 000 ]] && [[ "$status_code" -ne 200 ]]
+  then
+  echo
+  echo "Request failed with $status_code. Please check the Source Artifactory URL and make sure its correct"
+  echo
+  exit 0
+fi
+
+if [[ "$status_code" -eq 404 ]] && [[ "$status_code" -ne 200 ]]
+  then
+  echo
+  echo "Request failed with $status_code. Please check the Source Artifactory URL and Source Repository name provided make sure its correct. "
+  echo
+  exit 0
+fi
+
+if [[ "$status_code" -eq 400 ]] && [[ "$status_code" -ne 200 ]]
+  then
+  echo
+  echo "Request failed with $status_code. Please check the Source Artifactory URL and Source Repository name provided make sure its correct. "
+  echo
+  exit 0
+fi
+
+if [[ "$status_code" -ne 200 ]]
+  then
+  echo
+  echo "Request failed with $status_code. Please check the Source Artifactory URL and Source Repository name provided make sure its correct."
+  echo
+  exit 0
+fi
+
+status_code=$(curl -u$target_username:$target_password --write-out %{http_code} --silent --output /dev/null "$TARGET_ART/api/storage/$Target_repo_name/?list&deep=1&listFolders=0&mdTimestamps=1&statsTimestamps=1&includeRootPath=1" -L)
+
+if [[ "$status_code" -eq 401 ]] && [[ "$status_code" -ne 200 ]]
+  then
+  echo
+  echo "Request failed with $status_code. Please check the provided admin username and password for the Target Artifactory"
+  echo
+  exit 0
+fi
+
+if [[ "$status_code" -eq 000 ]] && [[ "$status_code" -ne 200 ]]
+  then
+  echo
+  echo "Request failed with $status_code. Please check the Target Artifactory URL and make sure its correct"
+  echo
+  exit 0
+fi
+
+if [[ "$status_code" -eq 404 ]] && [[ "$status_code" -ne 200 ]]
+  then
+  echo
+  echo "Request failed with $status_code. Please check the Target Artifactory URL and Target Repository name provided make sure its correct. "
+  echo
+  exit 0
+fi
+
+if [[ "$status_code" -eq 400 ]] && [[ "$status_code" -ne 200 ]]
+  then
+  echo
+  echo "Request failed with $status_code. Please check the Target Artifactory URL and Target Repository name provided make sure its correct. "
+  echo
+  exit 0
+fi
+
+if [[ "$status_code" -ne 200 ]]
+  then
+  echo
+  echo "Request failed with $status_code. Please check the Target Artifactory URL and Target Repository name provided make sure its correct. "
+  echo
+  exit 0
+fi
+
 curl -X GET -u$source_username:$source_password "$SOURCE_ART/api/storage/$Source_repo_name/?list&deep=1&listFolders=0&mdTimestamps=1&statsTimestamps=1&includeRootPath=1" -L > source.log
 curl -X GET -u$target_username:$target_password "$TARGET_ART/api/storage/$Target_repo_name/?list&deep=1&listFolders=0&mdTimestamps=1&statsTimestamps=1&includeRootPath=1" -L > target.log
 diff source.log target.log > diff_output.txt

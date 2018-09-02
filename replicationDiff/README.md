@@ -1,5 +1,5 @@
-Script find missing artifacts in Artifactory after replication
-==============================================================
+Script to find missing artifacts in Artifactory after replication
+=================================================================
 
 The replicationDiff.sh script can be used to find the missing artifacts on your target Artifactory repository if you notice discrepancy in the artifact count after a successful replication event.
 

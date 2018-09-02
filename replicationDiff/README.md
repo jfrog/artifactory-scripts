@@ -1,3 +1,6 @@
+###replicationDiff to find missing artifacts in Artifactory
+===========================================================
+
 The replicationDiff.sh script can be used to find the missing artifacts on your target Artifactory repository if you notice discrepancy in the artifact count after a successful replication event.
 
 The script can be run by providing parameters or you can just run the script wihtout parameters and it will prompt you for all the details necessary to run the diff between your source Artifactory repository and target Artifactory repository.

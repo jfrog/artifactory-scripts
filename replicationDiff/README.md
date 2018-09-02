@@ -10,15 +10,15 @@ Running the script by providing parameters
 
 The script needs nine parameters in order to run it. Below are these parameters
 
-`-source_adminuser`: (admin user)
-`-target_adminuser`: (admin user)
-`-source_art`: (your source Artifactory instance URL)
-`-target_art`: (your target Artifactory instance URL)
-`-source_repo`: (the source repository name)
-`-target_repo`: (the target repository name)
-`-source_password`: (admin user password for source Artifactory)
-`-target_password`: (admin user password for target Artifactory)
-`-download_missingfiles`: (yes or no)
+- `-source_adminuser`: (admin user)
+- `-target_adminuser`: (admin user)
+- `-source_art`: (your source Artifactory instance URL)
+- `-target_art`: (your target Artifactory instance URL)
+- `-source_repo`: (the source repository name)
+- `-target_repo`: (the target repository name)
+- `-source_password`: (admin user password for source Artifactory)
+- `-target_password`: (admin user password for target Artifactory)
+- `-download_missingfiles`: (yes or no)
 
 Here is an example on how to run the script by providing the above parameters as flags:
 

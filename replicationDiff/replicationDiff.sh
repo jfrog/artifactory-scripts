@@ -90,7 +90,7 @@ status_code=$(curl -u$SOURCEUSER:$SOURCEPASSWORD --write-out %{http_code} --sile
 if [[ "$status_code" -eq 401 ]] && [[ "$status_code" -ne 200 ]]
   then
   echo
-  echo "Request failed with $status_code. Please check the provided username (-source_adminuser) and password (-source_password) for the Source Artifactory" 
+  echo "Request failed with HTTP $status_code. Please check the provided username (-source_adminuser) and password (-source_password) for the Source Artifactory" 
   echo
   exit 0
 fi
@@ -98,7 +98,7 @@ fi
 if [[ "$status_code" -eq 000 ]] && [[ "$status_code" -ne 200 ]] 
   then
   echo
-  echo "Request failed with $status_code. Please check the Source Artifactory URL (-source_art) and make sure its correct"
+  echo "Request failed with '"Could not resolve host"'. Please check the Source Artifactory URL (-source_art) and make sure its correct"
   echo
   exit 0
 fi
@@ -106,7 +106,7 @@ fi
 if [[ "$status_code" -eq 404 ]] && [[ "$status_code" -ne 200 ]] 
   then
   echo
-  echo "Request failed with $status_code. Please check the Source Artifactory URL (-source_art) and Source Repository (-source_repo) make sure its correct. "
+  echo "Request failed with HTTP $status_code. Please check the Source Artifactory URL (-source_art) and Source Repository (-source_repo) make sure its correct. "
   echo
   exit 0
 fi
@@ -114,7 +114,7 @@ fi
 if [[ "$status_code" -eq 400 ]] && [[ "$status_code" -ne 200 ]] 
   then
   echo
-  echo "Request failed with $status_code. Please check the Source Artifactory URL (-source_art) and Source Repository (-source_repo) make sure its correct. "
+  echo "Request failed with HTTP $status_code. Please check the Source Artifactory URL (-source_art) and Source Repository (-source_repo) make sure its correct. "
   echo
   exit 0
 fi
@@ -122,7 +122,7 @@ fi
 if [[ "$status_code" -ne 200 ]]
   then
   echo
-  echo "Request failed with $status_code. Please check the Source Artifactory URL (-source_art) and Source Repository (-source_repo) make sure its correct."
+  echo "Request failed with HTTP $status_code. Please check the Source Artifactory URL (-source_art) and Source Repository (-source_repo) make sure its correct."
   echo
   exit 0
 fi
@@ -132,7 +132,7 @@ status_code=$(curl -u$TARGETUSER:$TARGETPASSWORD --write-out %{http_code} --sile
 if [[ "$status_code" -eq 401 ]] && [[ "$status_code" -ne 200 ]]
   then
   echo
-  echo "Request failed with $status_code. Please check the provided username (-target_adminuser) and password (-target_password) for the Source Artifactory"
+  echo "Request failed with HTTP $status_code. Please check the provided username (-target_adminuser) and password (-target_password) for the Source Artifactory"
   echo
   exit 0
 fi
@@ -140,7 +140,7 @@ fi
 if [[ "$status_code" -eq 000 ]] && [[ "$status_code" -ne 200 ]]
   then
   echo
-  echo "Request failed with $status_code. Please check the Target Artifactory URL (-target_art) and make sure its correct"
+  echo "Request failed with '"Could not resolve host"'. Please check the Target Artifactory URL (-target_art) and make sure its correct"
   echo
   exit 0
 fi
@@ -148,7 +148,7 @@ fi
 if [[ "$status_code" -eq 404 ]] && [[ "$status_code" -ne 200 ]]
   then
   echo
-  echo "Request failed with $status_code. Please check the Target Artifactory URL (-target_art) and Target Repository (-target_repo) make sure its correct. "
+  echo "Request failed with HTTP $status_code. Please check the Target Artifactory URL (-target_art) and Target Repository (-target_repo) make sure its correct. "
   echo
   exit 0
 fi
@@ -156,7 +156,7 @@ fi
 if [[ "$status_code" -eq 400 ]] && [[ "$status_code" -ne 200 ]]
   then
   echo
-  echo "Request failed with $status_code. Please check the Target Artifactory URL (-target_art) and Target Repository (-target_repo) make sure its correct. "
+  echo "Request failed with HTTP $status_code. Please check the Target Artifactory URL (-target_art) and Target Repository (-target_repo) make sure its correct. "
   echo
   exit 0
 fi
@@ -164,7 +164,7 @@ fi
 if [[ "$status_code" -ne 200 ]]
   then
   echo
-  echo "Request failed with $status_code. Please check the Target Artifactory URL (-target_art) and Target Repository (-target_repo) make sure its correct."
+  echo "Request failed with HTTP $status_code. Please check the Target Artifactory URL (-target_art) and Target Repository (-target_repo) make sure its correct."
   echo
   exit 0
 fi

@@ -132,7 +132,7 @@ status_code=$(curl -u$TARGETUSER:$TARGETPASSWORD --write-out %{http_code} --sile
 if [[ "$status_code" -eq 401 ]] && [[ "$status_code" -ne 200 ]]
   then
   echo
-  echo "Request failed with HTTP $status_code. Please check the provided username (-target_adminuser) and password (-target_password) for the Source Artifactory"
+  echo "Request failed with HTTP $status_code. Please check the provided username (-target_adminuser) and password (-target_password) for the Target Artifactory"
   echo
   exit 0
 fi

@@ -4,12 +4,14 @@ import sys
 
 
 class Colors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
+
+    def __init__(self):
+        self.HEADER = '\033[95m'
+        self.OKBLUE = '\033[94m'
+        self.OKGREEN = '\033[92m'
+        self.WARNING = '\033[93m'
+        self.FAIL = '\033[91m'
+        self.ENDC = '\033[0m'
 
     def disable(self):
         self.HEADER = ''
@@ -17,7 +19,6 @@ class Colors:
         self.OKGREEN = ''
         self.WARNING = ''
         self.FAIL = ''
-        self.ENDC = ''
 
     def clear(self):
         print(self.ENDC)
@@ -36,11 +37,11 @@ class Logger:
                  'message': 'WARNING:'},
             'ERROR':
                 {'results': [],
-                 'color': Colors.FAIL,
+                 'color': self.colors.FAIL,
                  'message': 'ERROR:'},
             'INFO':
                 {'results': [],
-                 'color': Colors.OKBLUE,
+                 'color': self.colors.OKBLUE,
                  'message': 'INFO:'
                  }
             }
@@ -56,11 +57,15 @@ class Logger:
                     entry = ' '.join([self.data[e_type]['color'], self.data[e_type]['message'], (match.group(6))])
                     self.data[e_type]['results'].append(entry)
 
-    def print(self, sf):
+    def output(self, sf):
         for entry_type in self.data:
             if entry_type in sf:
                 for result in self.data[entry_type]["results"]:
                     print(result)
+
+    def disable_color(self):
+        for entry_type in self.data:
+            self.data[entry_type]["color"] = ''
 
 
 def main():
@@ -69,17 +74,22 @@ def main():
     readfile = sys.argv[1]
     regex = '^([-0-9]+ [:0-9]+,[0-9]+) \[([-a-zA-Z0-9]+)\] \[([A-Z]+) *\] \(([.a-zA-Z0-9]+):([0-9]+)\) - (.*)$'
     logger = Logger(readfile, regex)
+    n_args = len(sys.argv)
 
-    if len(sys.argv) < 2:
+    if n_args < 2:
         print('Usage: python artifactory.py /path/to/artifactory.log [filters]')
         sys.exit(0)
-    elif len(sys.argv) == 2:
+
+    elif n_args == 2:
         search_filter = logger.default_sf
     else:
         search_filter = sys.argv[2:]
 
+    if "nocolor" in search_filter:
+        logger.disable_color()
+
     logger.parse()
-    logger.print(sf=search_filter)
+    logger.output(sf=search_filter)
     logger.colors.clear()
     exit()
 

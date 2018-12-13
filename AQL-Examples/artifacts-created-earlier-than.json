@@ -2,6 +2,6 @@ items.find({
  
 "$and":
 [
-{"created" : {"$gte":"2015-05-14"}}
+{"created" : {"$gte":"2018-05-14"}}
 ]
 }).include("name","repo","modified").limit(100)

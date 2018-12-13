@@ -13,25 +13,25 @@ readfile = sys.argv[1]
 i = 0
 with open(readfile) as f:
     for line in f:
-    	if "WARN" in line:
-    		try:
-    			regex = '^([-0-9]+ [:0-9]+,[0-9]+) \[([-a-zA-Z0-9]+)\] \[([A-Z]+) *\] \(([.a-zA-Z0-9]+):([0-9]+)\) - (.*)$'
-    			match = re.search(regex,line.encode('ascii'),flags = 0)
-    			print Fore.RED + "WARNING:" + (match.group(6))
+        if "WARN" in line:
+            try:
+                regex = '^([-0-9]+ [:0-9]+,[0-9]+) \[([-a-zA-Z0-9]+)\] \[([A-Z]+) *\] \(([.a-zA-Z0-9]+):([0-9]+)\) - (.*)$'
+                match = re.search(regex,line.encode('ascii'),flags = 0)
+                print Fore.RED + "WARNING:" + (match.group(6))
            
-    		except Exception:
-    			pass
+            except Exception:
+                pass
 
 with open(readfile) as f:
     for line in f:
-    	if "ERROR" in line:
-    		try:
-    			regex = '^([-0-9]+ [:0-9]+,[0-9]+) \[([-a-zA-Z0-9]+)\] \[([A-Z]+) *\] \(([.a-zA-Z0-9]+):([0-9]+)\) - (.*)$'
-    			match = re.search(regex,line.encode('ascii'),flags = 0)
-    			print Fore.YELLOW + "ERROR:" + (match.group(6))
+        if "ERROR" in line:
+            try:
+                regex = '^([-0-9]+ [:0-9]+,[0-9]+) \[([-a-zA-Z0-9]+)\] \[([A-Z]+) *\] \(([.a-zA-Z0-9]+):([0-9]+)\) - (.*)$'
+                match = re.search(regex,line.encode('ascii'),flags = 0)
+                print Fore.YELLOW + "ERROR:" + (match.group(6))
             
-    		except Exception:
-    			pass
+            except Exception:
+                pass
 
 with open(readfile) as f:
     for line in f:
@@ -46,5 +46,4 @@ with open(readfile) as f:
     
 print (Style.RESET_ALL)
 exit()
-    	
- 
+

@@ -2,20 +2,26 @@
 import re
 import sys
 
-try:
-    import colorama
-    from colorama import Fore, Back, Style
-    ce = True  # Color Enabled
 
-except ModuleNotFoundError:
-    print("Colorama is not installed. Coloring functions will be disabled.")
-    print("To enable coloring run 'pip install colorama'.")
-    print()
-    ce = False  # Color Enabled
+class Colors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
 
-except Exception as e:
-    print("Unexpected exception during import of Colorama")
-    print(e)
+    def disable(self):
+        self.HEADER = ''
+        self.OKBLUE = ''
+        self.OKGREEN = ''
+        self.WARNING = ''
+        self.FAIL = ''
+        self.ENDC = ''
+
+    def clear(self):
+        print(self.ENDC)
+
 
 if len(sys.argv) !=2:
     print('Usage: python artifactory.py /path/to/artifactory.log')
@@ -25,39 +31,41 @@ if len(sys.argv) !=2:
 # Gather input values
 readfile = sys.argv[1]
 
+data = {'WARN':
+            {'results': [],
+             'color': Colors.WARNING,
+             'message': 'WARNING:'},
+        'ERROR':
+            {'results': [],
+             'color': Colors.FAIL,
+             'message': 'ERROR:'},
+        'INFO':
+            {'results': [],
+             'color': Colors.OKBLUE,
+             'message': 'INFO:'
+             }
+        }
+
+
+regex = '^([-0-9]+ [:0-9]+,[0-9]+) \[([-a-zA-Z0-9]+)\] \[([A-Z]+) *\] \(([.a-zA-Z0-9]+):([0-9]+)\) - (.*)$'
+
+unexpected_error_log = "[artifactory.py] Unexpected exception when parsing for {}"
+
 with open(readfile) as f:
     for line in f.readlines():
-        if "WARN" in line:
-            try:
-                regex = '^([-0-9]+ [:0-9]+,[0-9]+) \[([-a-zA-Z0-9]+)\] \[([A-Z]+) *\] \(([.a-zA-Z0-9]+):([0-9]+)\) - (.*)$'
-                match = re.search(regex, line, flags=0)
-                if ce:
-                    print(Fore.RED, "WARNING:", (match.group(6)))
-                else:
-                    print("--")
-            except Exception as e:
-                print("[artifactory.py] Unexpected exception when parsing for warnings")
-                print(e)
+        message = ""
+        match = re.search(regex, line, flags=0)
 
-        if "ERROR" in line:
-            try:
-                match = re.search(regex, line, flags=0)
-                print(Fore.YELLOW + "ERROR:" + (match.group(6)))
+        if match:
+            e_type = [x for x in ["ERROR", "WARN", "INFO"] if x in line][0]
+            entry = ' '.join([data[e_type]['color'], data[e_type]['message'], (match.group(6))])
+            data[e_type]['results'].append(entry)
 
-            except Exception as e:
-                print("[artifactory.py] Unexpected exception when parsing for warnings")
-                print(e)
+for entry_type in data:
+    for result in data[entry_type]["results"]:
+        print(result)
 
-        if "INFO" in line:
-            try:
-                regex = '^([-0-9]+ [:0-9]+,[0-9]+) \[([-a-zA-Z0-9]+)\] \[([A-Z]+) *\] \(([.a-zA-Z0-9]+):([0-9]+)\) - (.*)$'
-                match = re.search(regex, line, flags=0)
-                print(Fore.GREEN + "INFO:" + (match.group(6)))
-            
-            except Exception as e:
-                print("[artifactory.py] Unexpected exception when parsing for warnings")
-                print(e)
-    
-print (Style.RESET_ALL)
+Colors().clear()
+
 exit()
 

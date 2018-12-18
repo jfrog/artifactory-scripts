@@ -8,9 +8,11 @@ password = "password"
 artifactory = "https://127.0.0.1:8081/artifactory/" # change this artifactory URL
 #make sure to clarify if HTTP or HTTPS
 
+
 def deletebuild(buildtodelete,idtodelete):
-    print buildtodelete + idtodelete
+    print(buildtodelete + idtodelete)
     r = requests.delete(buildtodelete + idtodelete, auth= (username,password))
+
 
 def inspectbuildjson(buildjson,buildjsonid):
     #looks through every single build json in every build ID
@@ -18,10 +20,11 @@ def inspectbuildjson(buildjson,buildjsonid):
     buildinfo = json.loads(r.text)
 
     if "statuses" not in buildinfo["buildInfo"] or len(buildinfo["buildInfo"]["statuses"]) == 0:
-        print "Deleting this build: " + buildjson + buildjsonid
+        print("Deleting this build: " + buildjson + buildjsonid)
         deletebuild(buildjson,re.sub('/', '?buildNumbers=', buildjsonid))
     else:
-        print "Keeping this build: " + buildjson + buildjsonid +  " - " + buildinfo["buildInfo"]["statuses"][0]["status"]
+        print("Keeping this build: " + buildjson + buildjsonid +  " - " + buildinfo["buildInfo"]["statuses"][0]["status"])
+
 
 def findbuildnumbers(buildname):
     #finds all build ID's from all build projects
@@ -31,6 +34,7 @@ def findbuildnumbers(buildname):
     for item in build_data["buildsNumbers"]:
         inspectbuildjson(url,item["uri"])
 
+
 def getallbuilds():
     #looks through all build projects
     buildurl = "api/build"
@@ -39,5 +43,6 @@ def getallbuilds():
     json_data = json.loads(r.text)
     for item in json_data["builds"]:
         findbuildnumbers(url + item["uri"])
+
 
 getallbuilds()

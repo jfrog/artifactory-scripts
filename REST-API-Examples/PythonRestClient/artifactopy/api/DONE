@@ -1,0 +1,54 @@
+===== GET =====
+GET /api/build
+GET /api/build/{buildName}
+GET /api/build/{buildName}/{buildNumber}
+GET /api/build/{buildName}/{buildNumber}?diff={OlderbuildNumber}
+-----
+GET /api/storage/{repoKey}/{folder-path}
+GET /api/storage/{repoKey}/{filePath}
+GET /api/storageinfo
+GET /api/storage/{repoKey}/{item-path}?lastModified
+GET /api/storage/{repoKey}/{item-path}?stats
+GET /api/storage/{repoKey}/{itemPath}?properties[=x[,y]]
+-----
+GET /api/replications/{repoKey}
+GET /api/replication/{repoKey}
+GET /api/replications/channels/{repo}
+-----
+GET /api/security/users
+GET /api/security/users/{userName}
+GET /api/security/encryptedPassword
+GET /api/security/configuration/passwordExpirationPolicy
+GET /api/security/userLockPolicy
+GET /api/security/lockedUsers
+GET /api/security/apiKey
+GET /api/security/groups
+GET /api/security/groups/{groupName}
+GET /api/security/permissions
+GET /api/security/permissions/{permissionTargetName}
+GET /api/security/token
+-----
+GET /api/system/security
+GET /api/system/service_id
+GET /api/system/security/certificates
+GET /api/system
+GET /api/system/ping
+GET /api/system/configuration
+GET /api/system/licenses
+GET /api/system/version
+GET /api/system/configuration/webServer
+GET /api/system/configuration/reverseProxy/nginx
+GET /api/system/replications
+==========
+
+===== PATCH =====
+==========
+
+===== DELETE =====
+==========
+
+===== DELETE =====
+==========
+
+===== DELETE =====
+==========

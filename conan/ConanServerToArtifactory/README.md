@@ -12,6 +12,5 @@ The script requires [Python 2 or 3](https://www.python.org/downloads/) installed
 To run this tool, use:  
 
 ```
- $ python migrate.py
-
+$ python migrate.py
 ```

@@ -10,10 +10,12 @@ GET /api/build/{buildName}/{buildNumber}
 GET /api/build/{buildName}/{buildNumber}?diff={OlderbuildNumber}
 """
 
+
 class Build:
     def __init__(self, auth, art_url, extra=""):
         self.auth = auth
         self.art_url = art_url
+        self.extra = extra
         if self.art_url[-1] is not '/':
             self.art_url += '/'
 

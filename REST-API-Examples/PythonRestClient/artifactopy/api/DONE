@@ -39,6 +39,22 @@ GET /api/system/version
 GET /api/system/configuration/webServer
 GET /api/system/configuration/reverseProxy/nginx
 GET /api/system/replications
+-----
+GET /api/search/artifact?name=name[&repos=x[,y]]
+GET /api/search/archive?name=[archiveEntryName][&repos=x[,y]]
+GET /api/search/gavc?[g=groupId][&a=artifactId][&v=version][&c=classifier][&repos=x[,y]]
+GET /api/search/prop?[p1=v1,v2][&p2=v3][&repos=x[,y]]
+GET /api/search/checksum?md5=md5sum?sha1=sha1sum?sha256=sha256sum[&repos=x[,y]]
+GET /api/search/badChecksum?type=md5|sha1[&repos=x[,y]]
+GET /api/search/usage?notUsedSince=javaEpochMillis[&createdBefore=javaEpochMillis][&repos=x[,y]]
+GET /api/search/creation?from=javaEpochMillis[&to=javaEpochMillis][&repos=x[,y]]
+GET /api/search/pattern?pattern=repo-key:this/is/a/*pattern*.war
+GET /api/search/dependency?sha1=sha1Checksum
+GET /api/search/license[?unapproved=1][&unknown=1][&notfound=0][&neutral=0][&approved=0][&autofind=0][&repos=x[,y]]
+GET /api/search/versions?[g=groupId][&a=artifactId][&v=version][&remote=0/1][&repos=x[,y]]
+GET /api/search/latestVersion?[g=groupId][&a=artifactId][&v=version][&remote=1][&repos=x[,y]]
+GET /api/search/dates?[from=fromVal][&to=toVal][&repos=x[,y]][&dateFields=c[,d]]
+
 ==========
 
 ===== PATCH =====

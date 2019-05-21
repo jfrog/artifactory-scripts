@@ -81,4 +81,3 @@ echo "done"
 exit 0
 fi
 cat filepaths_uri.txt | xargs -n 1 curl -sS -L -u$source_username:$source_password > /dev/null
-done

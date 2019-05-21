@@ -13,7 +13,6 @@ read source_username
 echo "Password for source Artifactory: "
 read -s source_password
 
-echo $SOURCE_ART
 status_code=$(curl -u$source_username:$source_password --write-out %{http_code} --silent --output /dev/null "$SOURCE_ART/api/docker/$Source_repo_name/v2/$docker_imagename/manifests/$docker_tag" -L)
 
 if [[ "$status_code" -eq 401 ]] && [[ "$status_code" -ne 200 ]]

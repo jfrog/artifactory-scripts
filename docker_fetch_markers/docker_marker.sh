@@ -9,10 +9,12 @@ read source_username
 echo "Password for source Artifactory: "
 read -s source_password
 
-echo $Source_repo_name
-echo $SOURCE_ART
+echo
+REMOTE_REPO=${Source_repo_name}-cache
+echo $REMOTE_REPO
+echo
 
-curl -X POST -u$source_username:$source_password $SOURCE_ART/api/search/aql -d 'items.find({"$and": [{"repo" : "$Source_repo_name"}, {"name" : {"$match" : "*.marker"}}]})' -H "Content-Type: text/plain" > marker_layers.txt
+curl -X POST -u$source_username:$source_password $SOURCE_ART/api/search/aql -d 'items.find({"$and": [{"repo" : "'"$REMOTE_REPO"'"}, {"name" : {"$match" : "*.marker"}}]})' -H "Content-Type: text/plain" > marker_layers.txt
 
 jq -M -r '.results[] | "\(.path)/blobs/\(.name)"' marker_layers.txt > marker_paths.txt
 

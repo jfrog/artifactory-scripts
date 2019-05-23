@@ -18,7 +18,7 @@ curl -X POST -u$source_username:$source_password $SOURCE_ART/api/search/aql -d '
 
 jq -M -r '.results[] | "\(.path)/blobs/\(.name)"' marker_layers.txt > marker_paths.txt
 
-sed 's/[",]//g' new_uri.txt | sed 's|library/||g' | sed 's/.marker//g' | sed "s/__/:/g" | sed 's|/.*blobs|/blobs|' > download_markers.txt
+sed 's/[",]//g' marker_paths.txt | sed 's|library/||g' | sed 's/.marker//g' | sed "s/__/:/g" | sed 's|/.*blobs|/blobs|' > download_markers.txt
 
 while read p; do
 

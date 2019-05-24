@@ -4,7 +4,7 @@ read Source_ART_URL
 SOURCE_ART=${Source_ART_URL%/}
 echo "Enter your docker remote repository name without the '-cache' suffix: "
 read Source_repo_name
-echo "Enter admin username for Artifactory: "
+echo "Enter username with Read and Deploy permissions to the above repository in Artifactory: "
 read source_username
 echo "Password for Artifactory: "
 read -s source_password
@@ -73,7 +73,7 @@ while read p; do
 
 prefix=$SOURCE_ART/api/docker/$Source_repo_name/v2/$p
 
-curl -u$source_username:$source_password --progress-bar -w "HTTP/1.1 %{http_code} OK | %{time_total} seconds | %{size_download} bytes\\n" $prefix -o /dev/null
+curl -sS -u$source_username:$source_password -w "HTTP/1.1 %{http_code} OK | %{time_total} seconds | %{size_download} bytes\\n" $prefix -o /dev/null &
 done <download_markers.txt
 fi
 rm marker_layers.txt marker_paths.txt download_markers.txt

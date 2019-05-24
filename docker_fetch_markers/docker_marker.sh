@@ -17,7 +17,6 @@ curl -X POST -sS -u$source_username:$source_password $SOURCE_ART/api/search/aql 
 
 jq -M -r '.results[] | "\(.path)/blobs/\(.name)"' marker_layers.txt > marker_paths.txt
 
-#sed 's/[",]//g' marker_paths.txt | sed 's|library/||g' | sed 's/.marker//g' | sed "s/__/:/g" | sed 's|/.*blobs|/blobs|' > download_markers.txt
 sed 's/[“,]//g' marker_paths.txt | sed 's|library/||g' | sed 's/.marker//g' | sed "s/__/:/g" | awk 'sub("[/][^,;/]+[/]blobs/", "/blobs/", $0)' > download_markers.txt
 
 echo "Here are the number of marker layers in this repository"
@@ -30,15 +29,13 @@ if [[ $input =~ [yY](es)* ]]
 then
 while read p; do
 
-
 prefix=$SOURCE_ART/api/docker/$Source_repo_name/v2/$p
-#awk -v prefix="$prefix" '{print prefix $0}' docker_uri.txt > filepaths_uri.txt
 
-curl -u$source_username:$source_password --progress-bar $prefix > /dev/null
+curl -u$source_username:$source_password --progress-bar -w "HTTP/1.1 %{http_code} OK | %{time_total} seconds | %{size_download} bytes\\n" $prefix -o /dev/null
 done <download_markers.txt
 fi
+rm marker_layers.txt marker_paths.txt download_markers.txt
 if [[ $input =~ [nN](o)* ]]
 then
 echo "Skipping the download of marker layers"
-exit 0
 fi

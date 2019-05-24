@@ -11,14 +11,15 @@ read -s source_password
 
 echo
 REMOTE_REPO=${Source_repo_name}-cache
-echo $REMOTE_REPO
+#echo $REMOTE_REPO
 echo
 
 curl -X POST -u$source_username:$source_password $SOURCE_ART/api/search/aql -d 'items.find({"$and": [{"repo" : "'"$REMOTE_REPO"'"}, {"name" : {"$match" : "*.marker"}}]})' -H "Content-Type: text/plain" > marker_layers.txt
 
 jq -M -r '.results[] | "\(.path)/blobs/\(.name)"' marker_layers.txt > marker_paths.txt
 
-sed 's/[",]//g' marker_paths.txt | sed 's|library/||g' | sed 's/.marker//g' | sed "s/__/:/g" | sed 's|/.*blobs|/blobs|' > download_markers.txt
+#sed 's/[",]//g' marker_paths.txt | sed 's|library/||g' | sed 's/.marker//g' | sed "s/__/:/g" | sed 's|/.*blobs|/blobs|' > download_markers.txt
+sed 's/[“,]//g' new_uri.txt | sed 's|library/||g' | sed 's/.marker//g' | sed "s/__/:/g" | awk 'sub("[/][^,;/]+[/]blobs/", "/blobs/", $0)' > download_markers.txt
 
 while read p; do
 

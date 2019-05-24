@@ -13,6 +13,48 @@ echo
 REMOTE_REPO=${Source_repo_name}-cache
 #echo $REMOTE_REPO
 
+status_code=$(curl -X POST -sS -u$source_username:$source_password --write-out %{http_code} --silent --output /dev/null $SOURCE_ART/api/search/aql -d 'items.find({"$and": [{"repo" : "'"$REMOTE_REPO"'"}, {"name" : {"$match" : "*.marker"}}]})' -H "Content-Type: text/plain")
+
+if [[ "$status_code" -eq 401 ]] && [[ "$status_code" -ne 200 ]]
+  then
+  echo
+  echo "Request failed with HTTP $status_code. Please check the provided username and password for Artifactory" 
+  echo
+  exit 0
+fi
+
+if [[ "$status_code" -eq 000 ]] && [[ "$status_code" -ne 200 ]] 
+  then
+  echo
+  echo "Request failed with Could not resolve host: $SOURCEART Please check the Artifactory URL and make sure its correct"
+  echo
+  exit 0
+fi
+
+if [[ "$status_code" -eq 404 ]] && [[ "$status_code" -ne 200 ]] 
+  then
+  echo
+  echo "Request failed with HTTP $status_code. Please check the Artifactory URL and Remote Repository and make sure its correct. "
+  echo
+  exit 0
+fi
+
+if [[ "$status_code" -eq 400 ]] && [[ "$status_code" -ne 200 ]] 
+  then
+  echo
+  echo "Request failed with HTTP $status_code. Please check the Artifactory URL and Remote Repository and make sure its correct. "
+  echo
+  exit 0
+fi
+
+if [[ "$status_code" -ne 200 ]]
+  then
+  echo
+  echo "Request failed with HTTP $status_code. Please check the Artifactory URL and Remote Repository make and sure its correct."
+  echo
+  exit 0
+fi
+
 curl -X POST -sS -u$source_username:$source_password $SOURCE_ART/api/search/aql -d 'items.find({"$and": [{"repo" : "'"$REMOTE_REPO"'"}, {"name" : {"$match" : "*.marker"}}]})' -H "Content-Type: text/plain" > marker_layers.txt
 
 jq -M -r '.results[] | "\(.path)/blobs/\(.name)"' marker_layers.txt > marker_paths.txt

@@ -12,22 +12,33 @@ read -s source_password
 echo
 REMOTE_REPO=${Source_repo_name}-cache
 #echo $REMOTE_REPO
-echo
 
-curl -X POST -u$source_username:$source_password $SOURCE_ART/api/search/aql -d 'items.find({"$and": [{"repo" : "'"$REMOTE_REPO"'"}, {"name" : {"$match" : "*.marker"}}]})' -H "Content-Type: text/plain" > marker_layers.txt
+curl -X POST -sS -u$source_username:$source_password $SOURCE_ART/api/search/aql -d 'items.find({"$and": [{"repo" : "'"$REMOTE_REPO"'"}, {"name" : {"$match" : "*.marker"}}]})' -H "Content-Type: text/plain" > marker_layers.txt
 
 jq -M -r '.results[] | "\(.path)/blobs/\(.name)"' marker_layers.txt > marker_paths.txt
 
 #sed 's/[",]//g' marker_paths.txt | sed 's|library/||g' | sed 's/.marker//g' | sed "s/__/:/g" | sed 's|/.*blobs|/blobs|' > download_markers.txt
-sed 's/[“,]//g' download_markers.txt | sed 's|library/||g' | sed 's/.marker//g' | sed "s/__/:/g" | awk 'sub("[/][^,;/]+[/]blobs/", "/blobs/", $0)' > download_markers.txt
+sed 's/[“,]//g' marker_paths.txt | sed 's|library/||g' | sed 's/.marker//g' | sed "s/__/:/g" | awk 'sub("[/][^,;/]+[/]blobs/", "/blobs/", $0)' > download_markers.txt
 
+echo "Here are the number of marker layers in this repository"
+echo 
+cat ~/Downloads/download_markers.txt | wc -l
+echo
+echo "Do you want to download these marker layers?(yes/no)"
+read input
+if [[ $input =~ [yY](es)* ]]
+then
 while read p; do
 
 
 prefix=$SOURCE_ART/api/docker/$Source_repo_name/v2/$p
 #awk -v prefix="$prefix" '{print prefix $0}' docker_uri.txt > filepaths_uri.txt
 
-curl -u$source_username:$source_password $prefix > /dev/null
-#cat filepaths_uri.txt | xargs -n 1 curl -sS -L -u$source_username:$source_password > /dev/null
-#rm source.log docker_uri.txt filepaths_uri.txt
+curl -u$source_username:$source_password --progress-bar $prefix > /dev/null
 done <download_markers.txt
+fi
+if [[ $input =~ [nN](o)* ]]
+then
+echo "Skipping the download of marker layers"
+exit 0
+fi

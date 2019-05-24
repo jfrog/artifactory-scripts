@@ -1,7 +1,8 @@
 Script to replace marker files in Artifactory docker remote repository cache with actual docker layers 
 ======================================================================================================
 
-**The script will require cURL and jq(command line json processor) installed in order to work**
+The script will require cURL and jq(command line json processor) installed in order to work
+-------------------------------------------------------------------------------------------
 
 The script will prompt for the Artifactory server details when you run it.
 

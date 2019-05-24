@@ -63,7 +63,7 @@ sed 's/[“,]//g' marker_paths.txt | sed 's|library/||g' | sed 's/.marker//g' | 
 
 echo "Here are the number of marker layers in this repository"
 echo 
-cat ~/Downloads/download_markers.txt | wc -l
+cat download_markers.txt | wc -l
 echo
 echo "Do you want to download these marker layers?(yes/no)"
 read input

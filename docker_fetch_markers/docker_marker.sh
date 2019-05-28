@@ -73,7 +73,7 @@ while read p; do
 
 prefix=$SOURCE_ART/api/docker/$Source_repo_name/v2/$p
 
-curl -sS -u$source_username:$source_password -w "HTTP/1.1 %{http_code} OK | %{time_total} seconds | %{size_download} bytes\\n" $prefix -o /dev/null &
+curl -sS -u$source_username:$source_password -w "HTTP/1.1 %{http_code} | %{time_total} seconds | %{size_download} bytes\\n" $prefix -o /dev/null &
 done <download_markers.txt
 wait
 fi

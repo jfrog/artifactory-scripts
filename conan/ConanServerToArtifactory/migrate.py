@@ -11,7 +11,7 @@ def run(cmd):
 output = subprocess.check_output("conan search * --remote=local --raw")
 packages = output.decode("utf-8").splitlines()
 
-for package in packages[:1]:
+for package in packages:
     print("Downloading %s" % package)
     run("conan download {} --remote=local".format(package))
 

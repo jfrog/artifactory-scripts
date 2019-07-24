@@ -8,11 +8,11 @@ def run(cmd):
         raise Exception("Command failed: %s" % cmd)
 
 # Assuming local = conan_server and Artifactory remotes
-output = subprocess.check_output("conan search -r=local --raw")
-packages = output.splitlines()
+output = subprocess.check_output("conan search * --remote=local --raw")
+packages = output.decode("utf-8").splitlines()
 
 for package in packages:
     print("Downloading %s" % package)
-    run("conan download %s -r=local" % package)
+    run("conan download {} --remote=local".format(package))
 
 run("conan upload * --all --confirm -r=artifactory")

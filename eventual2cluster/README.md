@@ -1,7 +1,7 @@
 # eventual2cluster
 This shell script should be used when migrating from an [Eventual](https://www.jfrog.com/confluence/display/RTF/Configuring+the+Filestore#ConfiguringtheFilestore-EventualBinaryProvider) to [Eventual-Cluster](https://www.jfrog.com/confluence/display/RTF/Configuring+the+Filestore#ConfiguringtheFilestore-Eventual-ClusterBinaryProvider) [filestore configuration](https://www.jfrog.com/confluence/display/RTF/Configuring+the+Filestore).
 
-The complete migration procedure is available at: HOW TO MIGRATE FROM "S3" to "Cluster-S3" KB.
+The complete migration procedure is available at: [How to migrate from "s3" to "cluster-s3"?](https://jfrog.com/knowledge-base/how-to-migrate-from-s3-to-cluster-s3/) Knowledge Base article.
 This script is only a "helper" to fully complete the migration.
 
 Instructions:

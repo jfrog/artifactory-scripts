@@ -167,7 +167,7 @@
             <repoLayoutRef>maven-2-default</repoLayoutRef>
             <handleReleases>true</handleReleases>
             <handleSnapshots>false</handleSnapshots>
-            <url>http://jcenter.bintray.com</url>
+            <url>https://jcenter.bintray.com</url>
         </remoteRepository>
     </remoteRepositories>
 

@@ -6,6 +6,6 @@ Do not run directly on important directories or log directories of production ap
 Instead, copy the files/ or provide a support bundle you plan to mask on a dedicated folder which you will provide to the script. 
 You will be prompted for a BUNDLE_DIR. You should provide the path to the dedicated folder you wish the script to run on.
 
-The script will replace all patterns matching `\([0-9]\{1,3\}\.\)\{3,3\}[0-9]\{1,3\}` and replace them with `x.x.x.x`.
+The script will replace all patterns matching `\([0-9]\{2,3\}\.\)\{3,3\}[0-9]\{1,3\}` and replace them with `x.x.x.x`.
 
 You are welcome to contribute and enhance the capabilities of this script.

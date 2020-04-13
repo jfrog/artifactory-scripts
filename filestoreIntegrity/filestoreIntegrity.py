@@ -62,7 +62,6 @@ def runRequest(conn, path, skipmsg=False):
     req.add_header('Authorization', auth)
     try:
         with urllib.request.urlopen(req) as resp:
-            resp = urllib.request.urlopen(req)
             stat = resp.getcode()
             if skipmsg and stat in (200, 404): msg = None
             else: msg = resp.read()

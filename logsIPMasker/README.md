@@ -12,4 +12,4 @@ You are welcome to contribute and enhance the capabilities of this script.
 
 
 # scrubIPandUserID
-Includes the logsIPMasker script as descrubed above and in addition to that it will also scrub the UserID from the logs
+Includes the logsIPMasker script as described above and in addition to that it will also scrub the UserID from the logs

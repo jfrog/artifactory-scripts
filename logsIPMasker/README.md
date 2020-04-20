@@ -2,7 +2,7 @@
 The purpose of this shell script is to mask IP addresses from all files in a directory.
 It will recursively extract any archive to search in the included files, and finally will pack the masked files back into a Zip archive.
 
-Do not run directly on important directories or log directories of production applications. 
+PLEASE NOTE: Do not run directly on important directories or log directories of production applications. 
 
 Instead, copy the files/ or provide a support bundle you plan to mask on a dedicated folder which you will provide to the script. 
 You will be prompted for a BUNDLE_DIR. You should provide the path to the dedicated folder you wish the script to run on.

@@ -13,3 +13,4 @@ You are welcome to contribute and enhance the capabilities of this script.
 
 # scrubIPandUserID
 Includes the logsIPMasker script as described above and in addition to that it will also scrub the UserID from the logs
+PLEASE NOTE: This script has specific 'sed' command that will work on Ubuntu/Redhat but will not work on MacOS. 

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 read -p "Please enter the \$BUNDLE_DIR. This will be a directory where the files to mask are located. `echo $'\n> '`" BUNDLE_DIR
 echo "Provided BUNDLE_DIR is: $BUNDLE_DIR, continue?"

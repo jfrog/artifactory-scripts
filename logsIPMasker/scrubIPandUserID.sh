@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 CURRENT_DIR=$pwd
 echo $currentDir
 read -p "Please enter the \$BUNDLE_DIR. This will be a directory where the files to mask are located. `echo $'\n> '`" BUNDLE_DIR

@@ -71,7 +71,7 @@ echo "Starting cleaning all tmp files"
 find $BUNDLE_DIR -type f -name "*.jfrogbkp" -delete
 echo "Finished cleaning all tmp files"
 
-echo "Looking for strings to replace in all files..."
+echo "Looking for IP addressed to replace in all files..."
 find $BUNDLE_DIR -type f -name "*" | while read line; do
   echo "Replacing IPs in file: $line "
   sed -i.jfrogbkp 's/\([0-9]\{2,3\}\.\)\{3,3\}[0-9]\{1,3\}/x.x.x.x/g' $line

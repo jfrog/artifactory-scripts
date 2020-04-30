@@ -16,7 +16,7 @@ do
   find $BUNDLE_DIR -type f \( -name '*.zip' -o -name '*.tgz' -o -name '*.gz' -o -name '*.tar.gz' \) | while read line; do
     echo "Found archive: $line"
     cd $(dirname $line)
-    echo "Current pwd: $(pwd)"
+    echo "Current pwd: $PWD"
     echo "Unarchiving..."
     if [ ${line: -4} == ".zip" ]
     then
@@ -39,9 +39,9 @@ echo "No archives remaining."
 
 echo "Looking for UserID and IP to replace in request, audit, and access files..."
 find $BUNDLE_DIR -type f \( -name 'access*.log' -o -name 'audit*.log' -o -name 'request*.log' -o -name 'artifactory*.log' -o -name 'security.audit*.log' \) | while read line; do
-if [[ ${line##*/} == "access"*".log" ]]
+if [[ ${line##*/} == "access"*".log" ]] || [[ ${line##*/} == "artifactory"*".log" ]]
     then
-      echo "found access file, $line scrubbing sensitive data inside"
+      echo "found ${line##*/} file, $line scrubbing sensitive data inside"
       sed -i.jfrogbkp 's/\( *for client : *\)[^ ]*\(.*\)*$/for client : ScrubbedUserID\2/Ig' $line
       sed -i.jfrogbkp -e 's/\( *user:  *\)[^ ]*\(.*\)*$/ User: ScrubbedUserID\2/Ig' -e ':a' -e 's/\( *user:  *\)[^ ]*\(.*\)*$/ User: ScrubbedUserID\2/' -e 'ta' $line
       sed -i.jfrogbkp -e 's/\( *user *\)[^ ]*\(.*\)*$/User: ScrubbedUserID\2/Ig' -e ':a' -e 's/\( *user *\)[^ ]*\(.*\)*$/ User: ScrubbedUserID\2/' -e 'ta' $line
@@ -53,26 +53,15 @@ if [[ ${line##*/} == "access"*".log" ]]
       sed -i.jfrogbkp -e 's/\( *Auto-Creation of *\)[^ ]*\(.*\)*$/ Auto-Creation of User: ScrubbedUserID\2/Ig' $line
     elif [[ ${line##*/} == "audit"*".log" ]]
     then
-      echo "found audit file, $line scrubbing sensitive data inside"
+      echo "found ${line##*/} file, $line scrubbing sensitive data inside"
       sed -i.jfrogbkp "s|Token.*|Scrubbed Line Due To Security|" $line 
-    elif [[ ${line##*/} == "artifactory"*".log" ]]
-    then
-      echo "found artifactory file, $line scrubbing sensitive data inside"
-      sed -i.jfrogbkp -e 's/\( *user:  *\)[^ ]*\(.*\)*$/ User: ScrubbedUserID\2/Ig' -e ':a' -e 's/\( *user:  *\)[^ ]*\(.*\)*$/ User: ScrubbedUserID\2/' -e 'ta' $line
-      sed -i.jfrogbkp -e 's/\( *user *\)[^ ]*\(.*\)*$/User: ScrubbedUserID\2/Ig' -e ':a' -e 's/\( *user *\)[^ ]*\(.*\)*$/ User: ScrubbedUserID\2/' -e 'ta' $line
-      sed -i.jfrogbkp -e 's/\( *username  *\)[^ ]*\(.*\)*$/ User: ScrubbedUserID\2/Ig' -e ':a' -e 's/\( *username  *\)[^ ]*\(.*\)*$/ User: ScrubbedUserID\2/' -e 'ta' $line
-      sed -i.jfrogbkp -e 's/\( *user named  *\)[^ ]*\(.*\)*$/ User: ScrubbedUserID\2/Ig'  $line
-      sed -i.jfrogbkp -e 's/\( *User not found:  *\)[^ ]*\(.*\)*$/ Could not find User: ScrubbedUserID\2/Ig' $line
-      sed -i.jfrogbkp -e 's/\( *authentication failed for *\)[^ ]*\(.*\)*$/ authentication failed for User: ScrubbedUserID\2/Ig' $line
-      sed -i.jfrogbkp -e 's/\( *token for subject *\)[^ ]*\(.*\)*$/ token for User: ScrubbedUserID\2/Ig' $line
-      sed -i.jfrogbkp -e 's/\( *Auto-Creation of *\)[^ ]*\(.*\)*$/ Auto-Creation of User: ScrubbedUserID\2/Ig' $line
     elif [[ ${line##*/} == "security.audit"*".log" ]]
     then
-      echo "found security.audit file, $line scrubbing sensitive data inside"
+      echo "found ${line##*/} file, $line scrubbing sensitive data inside"
         echo "Scrubbing file due to security reasons" > $line
     elif [[ ${line##*/} == "request"*"log" ]]
     then
-      echo "found request file, $line scrubbing sensitive data inside"
+      echo "found ${line##*/} file, $line scrubbing sensitive data inside"
       awk -F"|" -v OFS="|" '$3 { $4="ScubbedIP"} 1' $line | awk -F"|" -v OFS="|" '$3 { $5="ScrubbedUser"} 1' > ${line}.tmp && mv ${line}.tmp ${line}  
     fi
  

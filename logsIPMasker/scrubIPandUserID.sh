@@ -25,7 +25,7 @@ do
     elif [ ${line: -3} == ".gz" ]
     then
       echo "This is a gz file. Using gunzip."
-      gunzip $line
+      gunzip -k $line
     else
       echo "This is a tar archive. Using tar."
       tar zxvf $line
@@ -38,8 +38,8 @@ done
 echo "No archives remaining."
 
 echo "Looking for UserID and IP to replace in request, audit, and access files..."
-find $BUNDLE_DIR -type f \( -name 'access*.log' -o -name 'audit*.log' -o -name 'request*.log' -o -name 'artifactory*.log' -o -name 'security.audit*.log' \) | while read line; do
-if [[ ${line##*/} == "access"*".log" ]] || [[ ${line##*/} == "artifactory"*".log" ]]
+find $BUNDLE_DIR -type f \( -name 'access*.log' -o -name 'audit*.log' -o -name 'request*.log' -o -name 'artifactory*.log' -o -name 'security.audit*.log' -o -name 'catalina*.log' \) | while read line; do
+if [[ ${line##*/} == "access"*".log" ]] || [[ ${line##*/} == "artifactory"*".log" || [[ ${line##*/} == "catalina"*".log" ]]
     then
       echo "found ${line##*/} file, $line scrubbing sensitive data inside"
       sed -i.jfrogbkp 's/\( *for client : *\)[^ ]*\(.*\)*$/for client : ScrubbedUserID\2/Ig' $line
@@ -79,6 +79,6 @@ done
 
 echo "Starting to zip all"
 cd $BUNDLE_DIR
-zip -r JFrogBundleCleanIPs.$(date +%Y%m%d%H%M%S).zip .
+tar –zcvf JFrogBundleCleanIPs.$(date +%Y%m%d%H%M%S).tar .
 mv JFrogBundleCleanIPs* $CURRENT_DIR
 echo "DONE"

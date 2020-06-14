@@ -38,8 +38,8 @@ done
 echo "No archives remaining."
 
 echo "Looking for UserID and IP to replace in request, audit, and access files..."
-find $BUNDLE_DIR -type f \( -name 'access*.log' -o -name 'audit*.log' -o -name 'request*.log' -o -name 'artifactory*.log' -o -name 'security.audit*.log' -o -name 'catalina*.log' \) | while read line; do
-if [[ ${line##*/} == "access"*".log" ]] || [[ ${line##*/} == "artifactory"*".log" || [[ ${line##*/} == "catalina"*".log" ]]
+find $BUNDLE_DIR -type f \( -name 'access*.log' -o -name 'audit*.log' -o -name 'request*.log' -o -name 'artifactory*.log' -o -name 'security.audit*.log' -o -name 'catalina*.log' -o -name 'catalina*.out' \) | while read line; do
+if [[ ${line##*/} == "access"*".log" ]] || [[ ${line##*/} == "artifactory"*".log" || [[ ${line##*/} == "catalina"*".log" || [[ ${line##*/} == "catalina"*".out" ]]
     then
       echo "found ${line##*/} file, $line scrubbing sensitive data inside"
       sed -i.jfrogbkp 's/\( *for client : *\)[^ ]*\(.*\)*$/for client : ScrubbedUserID\2/Ig' $line
@@ -77,8 +77,8 @@ find $BUNDLE_DIR -type f -name "*" | while read line; do
   sed -i.jfrogbkp 's/\([0-9]\{2,3\}\.\)\{3,3\}[0-9]\{1,3\}/x.x.x.x/g' $line
 done
 
-echo "Starting to zip all"
-cd $BUNDLE_DIR
-tar –zcvf JFrogBundleCleanIPs.$(date +%Y%m%d%H%M%S).tar .
-mv JFrogBundleCleanIPs* $CURRENT_DIR
+echo "Starting to tar all"
+# cd $BUNDLE_DIR
+tar –zcvf JFrogBundleCleanIPs.$(date +%Y%m%d%H%M%S).tar $BUNDLE_DIR
+#mv JFrogBundleCleanIPs* $CURRENT_DIR
 echo "DONE"

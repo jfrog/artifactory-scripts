@@ -39,7 +39,7 @@ echo "No archives remaining."
 
 echo "Looking for UserID and IP to replace in request, audit, and access files..."
 find $BUNDLE_DIR -type f \( -name 'access*.log' -o -name 'audit*.log' -o -name 'request*.log' -o -name 'artifactory*.log' -o -name 'security.audit*.log' -o -name 'catalina*.log' -o -name 'catalina*.out' \) | while read line; do
-if [[ ${line##*/} == "access"*".log" ]] || [[ ${line##*/} == "artifactory"*".log" || [[ ${line##*/} == "catalina"*".log" || [[ ${line##*/} == "catalina"*".out" ]]
+if [[ ${line##*/} == "access"*".log" ]] || [[ ${line##*/} == "artifactory"*".log" ]] || [[ ${line##*/} == "catalina"*".log" ]] || [[ ${line##*/} == "catalina"*".out" ]]
     then
       echo "found ${line##*/} file, $line scrubbing sensitive data inside"
       sed -i.jfrogbkp 's/\( *for client : *\)[^ ]*\(.*\)*$/for client : ScrubbedUserID\2/Ig' $line

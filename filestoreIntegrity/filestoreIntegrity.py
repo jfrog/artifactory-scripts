@@ -8,7 +8,7 @@ import urllib.request
 import urllib.error
 
 # check the integrity, and print the results to stdout or the specified file
-def runCheck(conn, outfile):
+def runCheck(conn, outfile, _type):
     # open the output file for writing, or use stdout
     try:
         if outfile != None and outfile != '-':
@@ -20,7 +20,7 @@ def runCheck(conn, outfile):
     count = 0
     # iterate through every artifact, and print the ones that don't check
     with outf:
-        for repo in getRepoList(conn):
+        for repo in getRepoList(conn, _type):
             for artif in getArtifactList(conn, repo):
                 response = checkArtifact(conn, repo, artif)
                 if response != None:
@@ -32,8 +32,8 @@ def runCheck(conn, outfile):
         print(msg, file=outf)
 
 # request a list of all local repositories, and return them
-def getRepoList(conn):
-    stat, msg = runRequest(conn, '/api/repositories?type=local')
+def getRepoList(conn, _type):
+    stat, msg = runRequest(conn, '/api/repositories?type={}'.format(_type))
     if stat != 200:
         print('Error getting repository list: {}'.format(msg), file=sys.stderr)
         sys.exit(1)
@@ -92,12 +92,14 @@ def getArgs():
         "Check Artifactory for filestore integrity.",
         "the Artifactory base url",
         "your Artifactory username (or username:password)",
-        "output to the given file, rather than to stdout"
+        "output to the given file, rather than to stdout",
+        "The type of filestore integrity check (local or remote)"
     ]
     parser = argparse.ArgumentParser(description=help[0])
     parser.add_argument('url', nargs=1, help=help[1])
     parser.add_argument('-u', '--user', help=help[2])
     parser.add_argument('-o', '--output-file', help=help[3])
+    parser.add_argument('-t', '--type', default='local', help=help[4])
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -107,4 +109,4 @@ if __name__ == "__main__":
     auth = getAuth(args.user)
     urlbase = args.url[0]
     if urlbase[-1] == '/': urlbase = urlbase[:-1]
-    runCheck((urlbase, auth), args.output_file)
+    runCheck((urlbase, auth), args.output_file, args.type)

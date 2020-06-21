@@ -4,6 +4,7 @@ import json
 import base64
 import getpass
 import argparse
+import urllib
 import urllib.request
 import urllib.error
 
@@ -22,7 +23,7 @@ def runCheck(conn, outfile):
     with outf:
         for repo in getRepoList(conn):
             for artif in getArtifactList(conn, repo):
-                response = checkArtifact(conn, repo, artif)
+                response = checkArtifact(conn, repo, urllib.parse.quote(artif))
                 if response != None:
                     count += 1
                     print(response, file=outf)

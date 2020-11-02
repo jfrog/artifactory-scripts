@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from urllib.parse import urlparse
 import sys
 import json
 import base64
@@ -21,7 +22,9 @@ def runCheck(conn, outfile):
     # iterate through every artifact, and print the ones that don't check
     with outf:
         for repo in getRepoList(conn):
+            repo = urllib.parse.quote_plus(repo, encoding='utf-8', safe='/')
             for artif in getArtifactList(conn, repo):
+                artif = urllib.parse.quote_plus(artif, encoding='utf-8', safe='/')
                 response = checkArtifact(conn, repo, artif)
                 if response != None:
                     count += 1

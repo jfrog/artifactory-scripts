@@ -1,8 +1,8 @@
 #!/bin/bash
 LOC=$1
-${LOC:-"."}
+: ${LOC:-"."}
 if [ ! -d $LOC ]; then
-    echo "Usage is: ./multiLogParse.sh /path/to/logs/ <OPTIONAL_PREFIX>"
+    echo "Usage is: ./multiLogParse.sh /path/to/logs/ [optional prefix string for output files]"
 else
     echo "Using directory $LOC as LOC"
 fi

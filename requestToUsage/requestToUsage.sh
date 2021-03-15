@@ -21,6 +21,6 @@ else
 	echo "Please ignore the above error message from date, switching to gdate."
 	echo 'gdate'
 fi
-echo "0,0,0,0,0,0,0,0,0,0,=SUM(J:J)/(1024^3)" >> $OUTPUT
+echo "0,0,0,0,0,0,0,0,=SUM(J:J)/(1024^3),0,0" >> $OUTPUT
 echo "Added calculation line."
 echo "Open $OUTPUT in excel or a similar spreadsheet program"

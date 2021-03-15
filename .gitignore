@@ -39,3 +39,4 @@ tramp
 
 # Pycharm
 .idea
+.DS_Store

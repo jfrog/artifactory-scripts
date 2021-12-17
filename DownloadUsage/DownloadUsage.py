@@ -3,7 +3,6 @@ import re
 import requests
 import json
 from colorama import Fore, Back, Style
-import colorama
 
 username = "admin" #EDIT THIS
 password = "password" #EDIT THIS

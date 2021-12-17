@@ -23,7 +23,7 @@ with open(readfile) as f:
     print("Parsing Access Log...")
     for line in f:
         try:
-            p = re.compile(ur'(\d*)-(\d*-\d*\d*......)(........)(.*])(.*)(:)(.*)(for)(.)(.*)(\/)(.*)(\.)')
+            p = re.compile(r'(\d*)-(\d*-\d*\d*......)(........)(.*])(.*)(:)(.*)(for)(.)(.*)(\/)(.*)(\.)')
             match = re.match(p,line)
             if "ACCEPTED DOWNLOAD" in match.group(4):
                 checkfile = match.group(5) + "/" + match.group(7)

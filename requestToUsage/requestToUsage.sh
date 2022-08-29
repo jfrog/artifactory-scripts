@@ -41,4 +41,3 @@ else
 	echo 'gdate'
 fi
 awk -v var=$OUTPUT -F',' '{sum+=$10;}END{print var "|" sum}' $OUTPUT >> DataUsageSummary.txt
-sleep 200

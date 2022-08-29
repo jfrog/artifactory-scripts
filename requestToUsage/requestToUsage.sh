@@ -5,10 +5,29 @@ if [ ! -f $FILE ]; then
 fi
 PREFIX=$2
 
-OUTPUT=${PREFIX:+${PREFIX}-}$(head -c 8 $FILE).csv
+OUTPUT=${PREFIX:+${PREFIX}-}$(head -c 10 $FILE)_POST_Requests_Only.csv
 
-awk '!/0$/' $FILE > $OUTPUT
-if sed --version 
+awk '/POST/' $FILE > $OUTPUT
+if sed --version
+then sed "s/[|]/,/g" $OUTPUT -i
+echo "I am in sed with out error"
+else
+	echo "Please ignore the above error message from sed, switching to gsed."
+	gsed "s/[|]/,/g" $OUTPUT -i
+fi
+echo "Successfully outputted to $OUTPUT"
+if date --version
+then echo 'date'
+else
+	echo "Please ignore the above error message from date, switching to gdate."
+	echo 'gdate'
+fi
+awk -v var=$OUTPUT -F',' '{sum+=$10;}END{print var "|" sum}' $OUTPUT >> DataUsageSummary.txt
+
+OUTPUT=${PREFIX:+${PREFIX}-}$(head -c 10 $FILE)_GET_Requests_Only.csv
+
+awk '/GET/' $FILE > $OUTPUT
+if sed --version
 then sed "s/[|]/,/g" $OUTPUT -i
 else
 	echo "Please ignore the above error message from sed, switching to gsed."
@@ -17,11 +36,9 @@ fi
 echo "Successfully outputted to $OUTPUT"
 if date --version
 then echo 'date'
-else 
+else
 	echo "Please ignore the above error message from date, switching to gdate."
 	echo 'gdate'
 fi
-
-echo "0,0,0,0,0,0,0,0,=SUM(I:I)/(1024^3),0,0" >> $OUTPUT
-echo "Added calculation line."
-echo "Open $OUTPUT in excel or a similar spreadsheet program"
+awk -v var=$OUTPUT -F',' '{sum+=$10;}END{print var "|" sum}' $OUTPUT >> DataUsageSummary.txt
+sleep 200

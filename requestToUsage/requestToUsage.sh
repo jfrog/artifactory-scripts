@@ -1,7 +1,7 @@
 #!/bin/bash
 FILE=$1
 if [ ! -f $FILE ]; then
-    echo "Correct usage is: requestToUsage.sh request.log [optional prefix string]"
+    echo "Correct usage is: requestToUsage.sh artifactory-request.log [optional prefix string]"
 fi
 PREFIX=$2
 

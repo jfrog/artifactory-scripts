@@ -1,19 +1,26 @@
 #!/bin/bash
 FILE=$1
 if [ ! -f $FILE ]; then
-    echo "Correct usage is: requestToUsage.sh artifactory-request.log [optional prefix string]"
+    echo "Correct usage is: requestToUsage.sh request.log [optional delimiter] [optional prefix string]"
 fi
-PREFIX=$2
+DELIMITER=$2
+
+if [ -z "$2" ]
+  then
+    echo "No argument supplied for delimiter. Set comma as delimiter"
+    DELIMITER=','
+fi
+PREFIX=$3
 
 OUTPUT=${PREFIX:+${PREFIX}-}$(head -c 10 $FILE)_POST_Requests_Only.csv
 
 awk '/POST/' $FILE > $OUTPUT
 if sed --version
-then sed "s/[|]/,/g" $OUTPUT -i
+then sed "s/[$DELIMITER]/,/g" $OUTPUT -i
 echo "I am in sed with out error"
 else
 	echo "Please ignore the above error message from sed, switching to gsed."
-	gsed "s/[|]/,/g" $OUTPUT -i
+	gsed "s/[$DELIMITER]/,/g" $OUTPUT -i
 fi
 echo "Successfully outputted to $OUTPUT"
 if date --version
@@ -28,10 +35,10 @@ OUTPUT=${PREFIX:+${PREFIX}-}$(head -c 10 $FILE)_GET_Requests_Only.csv
 
 awk '/GET/' $FILE > $OUTPUT
 if sed --version
-then sed "s/[|]/,/g" $OUTPUT -i
+then sed "s/[$DELIMITER]/,/g" $OUTPUT -i
 else
 	echo "Please ignore the above error message from sed, switching to gsed."
-	gsed "s/[|]/,/g" $OUTPUT -i
+	gsed "s/[$DELIMITER]/,/g" $OUTPUT -i
 fi
 echo "Successfully outputted to $OUTPUT"
 if date --version

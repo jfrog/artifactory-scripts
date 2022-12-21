@@ -13,9 +13,9 @@ readfile = sys.argv[1]
 with open(readfile) as f:
     for line in f:
         try:
-            p = re.compile(ur'(\d*)\|(\d*)\|(.*)\|(.*)\|(.*)\|(.*)\|(.*)\|(.*)\|(.*)\|(.*)')
+            p = re.compile(r'(\d*)\|(\d*)\|(.*)\|(.*)\|(.*)\|(.*)\|(.*)\|(.*)\|(.*)\|(.*)')
             match = re.match(p,line)
-            print match.group(4) + " - " + match.group(6) + " - " + match.group(9)
+            print(match.group(4) + " - " + match.group(6) + " - " + match.group(9))
         except Exception:
             pass
 exit()

@@ -1,7 +1,0 @@
-items.find({
- 
-"$and":
-[
-{"created" : {"$gte":"2015-05-14"}}
-]
-}).include("name","repo","modified").limit(100)

@@ -1,1 +1,0 @@
-items.find({"@property": {"$eq" : "value"}})

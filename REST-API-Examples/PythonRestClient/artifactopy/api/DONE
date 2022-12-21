@@ -1,0 +1,70 @@
+===== GET =====
+GET /api/build
+GET /api/build/{buildName}
+GET /api/build/{buildName}/{buildNumber}
+GET /api/build/{buildName}/{buildNumber}?diff={OlderbuildNumber}
+-----
+GET /api/storage/{repoKey}/{folder-path}
+GET /api/storage/{repoKey}/{filePath}
+GET /api/storageinfo
+GET /api/storage/{repoKey}/{item-path}?lastModified
+GET /api/storage/{repoKey}/{item-path}?stats
+GET /api/storage/{repoKey}/{itemPath}?properties[=x[,y]]
+-----
+GET /api/replications/{repoKey}
+GET /api/replication/{repoKey}
+GET /api/replications/channels/{repo}
+-----
+GET /api/security/users
+GET /api/security/users/{userName}
+GET /api/security/encryptedPassword
+GET /api/security/configuration/passwordExpirationPolicy
+GET /api/security/userLockPolicy
+GET /api/security/lockedUsers
+GET /api/security/apiKey
+GET /api/security/groups
+GET /api/security/groups/{groupName}
+GET /api/security/permissions
+GET /api/security/permissions/{permissionTargetName}
+GET /api/security/token
+-----
+GET /api/system/security
+GET /api/system/service_id
+GET /api/system/security/certificates
+GET /api/system
+GET /api/system/ping
+GET /api/system/configuration
+GET /api/system/licenses
+GET /api/system/version
+GET /api/system/configuration/webServer
+GET /api/system/configuration/reverseProxy/nginx
+GET /api/system/replications
+-----
+GET /api/search/artifact?name=name[&repos=x[,y]]
+GET /api/search/archive?name=[archiveEntryName][&repos=x[,y]]
+GET /api/search/gavc?[g=groupId][&a=artifactId][&v=version][&c=classifier][&repos=x[,y]]
+GET /api/search/prop?[p1=v1,v2][&p2=v3][&repos=x[,y]]
+GET /api/search/checksum?md5=md5sum?sha1=sha1sum?sha256=sha256sum[&repos=x[,y]]
+GET /api/search/badChecksum?type=md5|sha1[&repos=x[,y]]
+GET /api/search/usage?notUsedSince=javaEpochMillis[&createdBefore=javaEpochMillis][&repos=x[,y]]
+GET /api/search/creation?from=javaEpochMillis[&to=javaEpochMillis][&repos=x[,y]]
+GET /api/search/pattern?pattern=repo-key:this/is/a/*pattern*.war
+GET /api/search/dependency?sha1=sha1Checksum
+GET /api/search/license[?unapproved=1][&unknown=1][&notfound=0][&neutral=0][&approved=0][&autofind=0][&repos=x[,y]]
+GET /api/search/versions?[g=groupId][&a=artifactId][&v=version][&remote=0/1][&repos=x[,y]]
+GET /api/search/latestVersion?[g=groupId][&a=artifactId][&v=version][&remote=1][&repos=x[,y]]
+GET /api/search/dates?[from=fromVal][&to=toVal][&repos=x[,y]][&dateFields=c[,d]]
+
+==========
+
+===== PATCH =====
+==========
+
+===== DELETE =====
+==========
+
+===== DELETE =====
+==========
+
+===== DELETE =====
+==========

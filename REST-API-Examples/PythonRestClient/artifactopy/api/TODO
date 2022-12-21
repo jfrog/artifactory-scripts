@@ -1,0 +1,194 @@
+DOWNLOADS
+------
+GET /repo-key/path/to/artifact.ext
+GET /repo-key/path/to/artifact.ext?trace
+GET /repo-key/path/to/artifact.jar!/path/to/archived/resource (NOTE! the '!' should be in between the archive file name and the archive entry path, and will not work without the '/' after the '!'.)
+---
+GET /api/archive/download/{repoKey}/{path}?archiveType={archiveType}[&includeChecksumFiles=true]
+GET /api/download/{repoKey}/{filePath}[?content=none/progress][&mark=numOfBytesToPrintANewProgressMark]
+-----
+GET /api/storage/{repoKey}/{folder-path}?list[&deep=0/1][&depth=n][&listFolders=0/1][&mdTimestamps=0/1][&includeRootPath=0/1]
+GET /api/storage/{repoKey}/{itemPath}?permissions
+==========
+OTHER GET
+-----
+GET /api/compliance/{repoKey}/{item-path}
+GET /api/sync/{remoteRepositoryKey}/{folderPath}[?progress=showProgress][&mark=numOfBytesToPrintANewProgressMark][&delete=deleteExistingFiles][&overwrite=never/force][&timeout=fileListTimeoutInMillis]
+GET /api/tasks
+GET /api/versions/{repo}/{path}?[listFiles=0/1]&[<property key>=<property value>]&[<property key>=<property value>]
+GET /api/gpg/key/public
+GET /api/import/system
+GET /api/export/system
+GET /api/support/bundles/
+GET /api/support/bundles/{bundle-name}
+==========
+PUPPET GET
+----
+GET /api/puppet/{repoKey}/v3/modules
+GET /api/puppet/{repoKey}/v3/modules/{user}-{module}
+GET /api/puppet/{repoKey}/v3/releases
+GET /api/puppet/{repoKey}/v3/releases/{user}-{module}-{version}
+==========
+
+=========
+DOCKER GET
+-----
+GET /api/docker/{repo-key}/v2/_catalog?n=<n from the request>&last=<last tag value from previous response>
+GET /api/docker/{repo-key}/v2/{image name}/tags/list?n=<n from the request>&last=<last tag value from previous response>
+=========
+REPOS GET
+-----
+GET /api/repositories[?type=repositoryType (local|remote|virtual|distribution)]
+GET /api/repositories/{repoKey}
+GET /api/repositories/{remoteRepoName}/configuration (deprecated)
+=========
+PLUGINS GET
+-----
+GET /api/plugins/download/{pluginName}
+GET /api/plugins
+GET /api/plugins/{pluginType}
+GET /api/plugins/build/staging/{strategyName}?buildName={buildName}&[params=p1=v1[,v2][|p2=v3]]
+====================
+
+PUT
+
+===================
+PUT /api/build/ -H "Content-Type: application/json" --upload-file build.json
+PUT /api/storage/{repoKey}/{itemPath}?properties=p1=v1[,v2][|p2=v3][&recursive=1]
+PUT /repo-key/path/to/directory/
+PUT /repo-key/path/to/artifact.ext
+PUT /repo-key/path/to/artifact.ext
+PUT path1/to/repo-key/ /path2/to/archive.zip
+PUT /api/replications/{repoKey}
+PUT /api/replications/multiple/{repo-key}
+PUT /api/security/users/{userName}
+PUT /api/security/configuration/passwordExpirationPolicy -H "Content-type: application/json" -d ' { "enabled" : "true|false", "passwordMaxAge" : "1-999", "notifyByEmail": "true|false" }
+PUT /api/security/userLockPolicy
+PUT /api/security/apiKey
+PUT /api/security/groups/{groupName}
+PUT /api/security/permissions/{permissionTargetName}
+PUT /api/gpg/key/public
+PUT /api/gpg/key/private
+PUT /api/gpg/passphrase
+PUT /api/repositories/{repoKey}
+PUT /api/system/configuration/baseUrl
+======================
+
+POST
+
+======================
+POST /api/build/promote/{buildName}/{buildNumber}
+POST /api/build/rename/{buildName}?to=newBuildName
+POST /api/build/pushToBintray/{build.name}/{build.number}?gpgPassphrase=<passphrase>[&gpgSign=true\false]
+POST /api/build/distribute/{buildName}/{buildNumber}
+POST /api/build/retention/{buildName}?async=<true | false>
+
+POST /api/docker/<repoKey>/v2/promote
+
+POST /api/checksum/sha256 -H "Content-Type: application/json"
+
+POST /api/archive/buildArtifacts -H "Content-Type: application/json"
+
+POST /api/bintray/push?descriptor=pathToDescriptorFile[&gpgPassphrase=passphrase][&gpgSign=true\false]
+POST /api/bintray/docker/push/{repoKey}
+
+POST /api/distribute
+
+POST /api/copy/{srcRepoKey}/{srcFilePath}?to=/{targetRepoKey}/{targetFilePath}[&dry=1][&suppressLayouts=0/1(default)][&failFast=0/1]
+POST /api/move/{srcRepoKey}/{srcFilePath}?to=/{targetRepoKey}/{targetFilePath}[&dry=1][&suppressLayouts=0/1(default)][&failFast=0/1]
+
+POST /api/replications/{repoKey}
+POST /api/replication/execute/{repoPath}
+POST /api/replication/{srcRepoKey}/{srcPath}
+POST /api/replications/multiple/{repo-key}
+POST /api/replications/{enable | disable}
+POST api/replications/channels/release
+POST api/system/replications/block?push=[true|false]&pull=[true|false]
+POST api/system/replications/unblock?push=[true|false]&pull=[true|false]
+
+POST /api/trash/empty
+POST /api/trash/restore/{from path}?to={to path}
+
+POST /api/system/storage/optimize
+POST /api/system/security (deprecated)
+POST /api/system/encrypt
+POST /api/system/decrypt
+POST /api/system/security/certificates/{Certificate_alias} -T {Certificate PEM file}
+POST /api/system/verifyconnection
+POST /api/system/configuration
+POST /api/system/licenses
+POST /api/system/licenses
+POST /api/system/configuration/webServer
+POST /api/system/bootstrap_bundle (deprecated)
+
+POST /api/search/aql
+POST /api/search/buildArtifacts
+
+POST /api/security/users/{userName}
+POST /api/security/users/authorization/expirePassword/{userName}
+POST /api/security/users/authorization/expirePassword -H "Content-type: application/json" -d '[{userA}, {userB}]'
+POST /api/security/users/authorization/expirePasswordForAllUsers
+POST /api/security/users/authorization/unexpirePassword/{userName}
+POST /api/security/users/authorization/changePassword  -H "Content-type: application/json" -d ' { "userName" : "{user}", "oldPassword" : "{old password}", "newPassword1" : "{new password}", "newPassword2" : "{verify new password}" }
+POST /api/security/unlockUsers/{userName}
+POST /api/security/unlockUsers
+POST /api/security/unlockAllUsers
+POST /api/security/apiKey
+POST /api/security/groups/{groupName}
+POST /api/security/token
+POST /api/security/token/revoke
+
+
+POST /api/repositories/{repoKey} -H "Content-Type: application/json"
+POST /api/yum/{repoKey}[?path={path to repodata dir][&async=0/1]
+POST /api/nuget/{repoKey}/reindex
+POST /api/npm/{repoKey}/reindex
+POST /api/maven[?repos=x[,y]][&force=0/1]
+POST /api/maven/calculateMetadata/{repoKey}/{folder-path}?{nonRecursive=true | false}
+POST api/deb/reindex/{repoKey} [?async=0/1][?writeProps=0/1]
+POST api/opkg/reindex/{repoKey} [?async=0/1][?writeProps=0/1]
+POST api/bower/{repoKey}/reindex
+POST /api/helm/{repoKey}/reindex
+POST /api/cran/reindex/cran-local[?async=0/1]
+POST /api/conda/reindex/conda-local[?async=0/1]
+
+POST /api/plugins/execute/{executionName}?[params=p1=v1[,v2][|p2=v3][&async=1]]
+POST /api/plugins/build/promote/{promotionName}/{buildName}/{buildNumber}?[params=p1=v1[,v2][|p2=v3]]
+POST /api/import/repositories
+POST /api/import/system
+POST /api/export/system
+POST /api/xray/setAlertIgnored?path={artifact path}
+POST /api/xray/allowBlockedArtifactsDownload?allow={true | false}
+POST /api/xray/allowDownloadWhenUnavailable?allow={true | false}
+POST /api/support/bundles/
+==================
+
+DELETE
+
+==================
+DELETE /api/build/{buildName}[?buildNumbers=n1[,n2]][&artifacts=0/1][&deleteAll=0/1]
+DELETE /api/storage/{repoKey}{itemPath}?properties=p1[,p2][&recursive=1]
+DELETE /repo-key/path/to/file-or-folder
+DELETE /api/replications/libs-release-local
+DELETE /api/replications/{repoKey}?url={replicatedURL}
+
+DELETE /api/trash/clean/{repoName/path}
+
+DELETE /api/security/users/{userName}
+DELETE /api/security/apiKey
+DELETE /api/security/apiKey/{username}
+DELETE /api/security/apiKey?deleteAll={0/1}
+DELETE /api/security/groups/{groupName}
+DELETE /api/security/permissions/{permissionTargetName}
+DELETE /api/system/security/certificates/{Certificate_alias}
+
+DELETE /api/repositories/{repoKey}
+DELETE /api/system/licenses?licenseHash=licenseHash1, licenseHash2...
+DELETE /api/support/bundles/{bundle-name}
+=================
+
+PATCH
+
+================
+
+PATCH /api/metadata/{repoKey}/{itemPath}?[&recursive=1]

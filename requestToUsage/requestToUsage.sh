@@ -29,7 +29,7 @@ else
 	echo "Please ignore the above error message from date, switching to gdate."
 	echo 'gdate'
 fi
-awk -v var=$OUTPUT -F',' '{sum+=$10;}END{print var "|" sum}' $OUTPUT >> DataUsageSummary.txt
+awk -v var=$OUTPUT -F'|' '{sum+=$8;}END{print var "|" sum}' $OUTPUT >> DataUsageSummary.txt
 
 OUTPUT=${PREFIX:+${PREFIX}-}$(head -c 10 $FILE)_GET_Requests_Only.csv
 
@@ -47,4 +47,4 @@ else
 	echo "Please ignore the above error message from date, switching to gdate."
 	echo 'gdate'
 fi
-awk -v var=$OUTPUT -F',' '{sum+=$10;}END{print var "|" sum}' $OUTPUT >> DataUsageSummary.txt
+awk -v var=$OUTPUT -F'|' '{sum+=$9;}END{print var "|" sum}' $OUTPUT >> DataUsageSummary.txt

@@ -54,6 +54,7 @@ def getArtifactList(conn, repo):
 # request an artifact, and return a summary of the artifact if the response code
 # wasn't 200 or 404
 def checkArtifact(conn, repo, artif):
+    artif = urllib.parse.quote(artif)
     stat, msg = runRequest(conn, '/{}{}'.format(repo, artif), skipmsg=True)
     if stat in (200, 404): return None
     return '[{} {}] {}{}'.format(stat, msg, repo, artif)

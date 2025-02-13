@@ -172,7 +172,7 @@ fi
 curl -X GET -u$SOURCEUSER:$SOURCEPASSWORD "$SOURCEART/api/storage/$SOURCEREPO/?list&deep=1&listFolders=0&mdTimestamps=1&statsTimestamps=1&includeRootPath=1" -L > source.log
 curl -X GET -u$TARGETUSER:$TARGETPASSWORD "$TARGETART/api/storage/$TARGETREPO/?list&deep=1&listFolders=0&mdTimestamps=1&statsTimestamps=1&includeRootPath=1" -L > target.log
 
-diff --new-line-format="" --unchanged-line-format=""  source.log target.log > diff_output.txt
+grep -Fxv -f target.log source.log > diff_output.txt
 sed -n '/uri/p' diff_output.txt | sed 's/[<>,]//g' | sed '/https/d' | sed '/http/d' | sed  's/ //g' | sed 's/[",]//g' | sed 's/uri://g' > cleanpaths.txt
 prefix=$SOURCEART/$SOURCEREPO
 awk -v prefix="$prefix" '{print prefix $0}' cleanpaths.txt > filepaths_uri.txt
@@ -307,7 +307,7 @@ fi
 
 curl -X GET -u$source_username:$source_password "$SOURCE_ART/api/storage/$Source_repo_name/?list&deep=1&listFolders=0&mdTimestamps=1&statsTimestamps=1&includeRootPath=1" -L > source.log
 curl -X GET -u$target_username:$target_password "$TARGET_ART/api/storage/$Target_repo_name/?list&deep=1&listFolders=0&mdTimestamps=1&statsTimestamps=1&includeRootPath=1" -L > target.log
-diff --new-line-format="" --unchanged-line-format=""  source.log target.log > diff_output.txt
+grep -Fxv -f target.log source.log > diff_output.txt
 sed -n '/uri/p' diff_output.txt | sed 's/[<>,]//g' | sed '/https/d' | sed '/http/d' | sed  's/ //g' | sed 's/[",]//g' | sed 's/uri://g' > cleanpaths.txt
 prefix=$SOURCE_ART/$Source_repo_name
 awk -v prefix="$prefix" '{print prefix $0}' cleanpaths.txt > filepaths_uri.txt

@@ -10,7 +10,7 @@ Run the script only if there are remaining binaries in the folder.
 
 During the script you will need to set several parameters:
 1. Function - add / delete. Select according to the corresponding directory the script is running from.
-2. Artifactory user - The user that runs the Artifactory process and owns the $ARTIFACTORY_HOME directory.
-3. Artifactory group - The group that is associated with the $ARTIFACTORY_HOME directory.
-4. Destination - The location of the "\_queue" folder. Should be $ARTIFACTORY_HOME/data/eventual/.
+2. Artifactory user - The user that runs the Artifactory process and owns the $JFROG_HOME directory.
+3. Artifactory group - The group that is associated with the $JFROG_HOME directory.
+4. Destination - The location of the "\_queue" folder. Should be $JFROG_HOME/artifactory/data/artifactory/eventual/.
 5. Operation - copy / move. Based on the selection the script will perform a `cp` or `mv` function. Copying is usually a safer option, but moving will be much faster and will not result in additional storage.

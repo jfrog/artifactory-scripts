@@ -42,7 +42,7 @@ if [ "$?" -eq 1 ]; then
     done
 fi
 
-read -p "4. Please enter your eventual data directory (default: /var/opt/jfrog/artifactory/data/eventual):" destination
+read -p "4. Please enter your eventual data directory (default: /var/opt/jfrog/artifactory/data/artifactory/eventual):" destination
 destination=${destination:-/var/opt/jfrog/artifactory/data/eventual}
 while [ ! -d "$destination" ]; do
       read -p "$destination doesn't exist, please enter your eventual data directory (\$ARTIFACTORY_HOME/data/eventual):" destination

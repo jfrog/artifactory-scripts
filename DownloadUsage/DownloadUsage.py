@@ -3,7 +3,6 @@ import re
 import requests
 import json
 from colorama import Fore, Back, Style
-import colorama
 
 username = "admin" #EDIT THIS
 password = "password" #EDIT THIS
@@ -20,10 +19,10 @@ totalbytes = 0
 notfound = 0
 
 with open(readfile) as f:
-    print "Parsing Access Log..."
+    print("Parsing Access Log...")
     for line in f:
         try:
-            p = re.compile(ur'(\d*)-(\d*-\d*\d*......)(........)(.*])(.*)(:)(.*)(for)(.)(.*)(\/)(.*)(\.)')
+            p = re.compile(r'(\d*)-(\d*-\d*\d*......)(........)(.*])(.*)(:)(.*)(for)(.)(.*)(\/)(.*)(\.)')
             match = re.match(p,line)
             if "ACCEPTED DOWNLOAD" in match.group(4):
                 checkfile = match.group(5) + "/" + match.group(7)
@@ -36,7 +35,7 @@ with open(readfile) as f:
         except Exception:
             notfound +=1 #An error may occur if the file has been deleted. This script is not perfect.
             pass
-print Fore.RED + "Could not find",(notfound),"artifacts(most likely deleted)" 
-print Fore.GREEN + "Total download usage:",(totalbytes/1000000),"MB"
-print (Style.RESET_ALL)
+print(Fore.RED + "Could not find",(notfound),"artifacts(most likely deleted)")
+print(Fore.GREEN + "Total download usage:",(totalbytes/1000000),"MB")
+print(Style.RESET_ALL)
 exit()

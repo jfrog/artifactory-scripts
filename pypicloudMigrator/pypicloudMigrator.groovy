@@ -2,7 +2,7 @@
 
 @Grab('org.jsoup:jsoup:1.11.3')
 
-import groovy.util.CliBuilder
+import groovy.cli.commons.CliBuilder
 import java.security.DigestInputStream
 import java.security.MessageDigest
 import java.util.concurrent.Executors
